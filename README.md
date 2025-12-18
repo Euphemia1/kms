@@ -15,7 +15,7 @@ Official website for Kolwezi Multi Services SARL, a Democratic Republic of Congo
 
 - **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS
 - **UI Components**: Shadcn UI, Lucide Icons
-- **Backend**: Next.js API Routes, MySQL
+- **Backend**: Next.js API Routes, PostgreSQL (via Supabase)
 - **Authentication**: Custom session-based auth
 - **Deployment**: Vercel
 
@@ -48,7 +48,12 @@ cp .env.example .env.local
 
 4. Set up the database:
 ```bash
-# Run the SQL scripts in the scripts/ directory in order
+# For PostgreSQL (recommended):
+# 1. 001-create-tables-postgres.sql
+# 2. 002-seed-data-postgres.sql
+# 3. 003-seed-initial-data-postgres.sql
+
+# For MySQL (legacy):
 # 1. 001-create-tables.sql
 # 2. 002-row-level-security.sql
 # 3. 002-seed-data.sql
@@ -64,13 +69,15 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## Deployment
 
-This project is configured for deployment on Vercel. Connect your GitHub repository to Vercel and set the following environment variables:
+This project is configured for deployment on Vercel with Supabase as the database backend. Connect your GitHub repository to Vercel and set the following environment variables:
 
-- DB_HOST
-- DB_USER
-- DB_PASSWORD
-- DB_NAME
-- DB_PORT
+- DB_HOST (Your Supabase database host)
+- DB_USER (Usually 'postgres')
+- DB_PASSWORD (Your Supabase database password)
+- DB_NAME (Usually 'postgres')
+- DB_PORT (Usually '5432')
+
+For local development, you can use the MySQL scripts, but for production deployment, PostgreSQL with Supabase is recommended.
 
 ## Admin Access
 
