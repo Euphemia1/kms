@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { queryOne } from "@/lib/db"
 import { JobForm } from "@/components/admin/job-form"
 import { notFound } from "next/navigation"
