@@ -33,26 +33,31 @@ export async function POST(request: Request) {
 
     const data = await request.json()
 
-    await execute(
-      `INSERT INTO projects (id, title, slug, description, full_description, category, client, location, start_date, end_date, status, featured_image, is_featured, is_published, created_by) 
-       VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-      [
-        data.title,
-        data.slug,
-        data.description || null,
-        data.full_description || null,
-        data.category,
-        data.client || null,
-        data.location || null,
-        data.start_date || null,
-        data.end_date || null,
-        data.status,
-        data.featured_image || null,
-        data.is_featured ? 1 : 0,
-        data.is_published ? 1 : 0,
-        session.user.id,
-      ],
-    )
+   await execute(
+  `INSERT INTO projects (
+    id, title, slug, description, full_description, category,
+    client, location, start_date, end_date, status,
+    featured_image, is_featured, is_published, created_by
+  )
+  VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  [
+    data.title,
+    data.slug,
+    data.description,
+    data.full_description,
+    data.category,
+    data.client,
+    data.location,
+    data.start_date,
+    data.end_date,
+    data.status,
+    data.featured_image,
+    data.is_featured,
+    data.is_published,
+    data.created_by
+  ]
+);
+
     
     // Revalidate the projects page
     revalidatePath('/projects')

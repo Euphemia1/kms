@@ -23,22 +23,27 @@ export async function POST(request: Request) {
     const data = await request.json()
 
     await execute(
-      `INSERT INTO job_postings (id, title, slug, department, location, employment_type, experience_level, salary_range, description, requirements, responsibilities, is_active) 
-       VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-      [
-        data.title,
-        data.slug,
-        data.department || null,
-        data.location || "Kolwezi, DRC",
-        data.employment_type || "full-time",
-        data.experience_level || null,
-        data.salary_range || null,
-        data.description || null,
-        JSON.stringify(data.requirements || []),
-        JSON.stringify(data.responsibilities || []),
-        data.is_active ? 1 : 0,
-      ],
-    )
+  `INSERT INTO job_postings (
+    id, title, slug, department, location, employment_type,
+    experience_level, salary_range, description, requirements,
+    responsibilities, is_active
+  )
+  VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  [
+    data.title,
+    data.slug,
+    data.department,
+    data.location,
+    data.employment_type,
+    data.experience_level,
+    data.salary_range,
+    data.description,
+    data.requirements,
+    data.responsibilities,
+    data.is_active
+  ]
+);
+
     
     // Revalidate the careers page
     revalidatePath('/careers')
