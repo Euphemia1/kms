@@ -1,3 +1,5 @@
+
+export const dynamic = "force-dynamic";
 import { query } from "@/lib/db"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FolderKanban, Newspaper, Briefcase, MessageSquare, Users, Clock } from "lucide-react"
