@@ -1,25 +1,20 @@
-import { Pool } from "pg"
+import mysql from "mysql2/promise"
 
 // Create a connection pool
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number.parseInt(process.env.DB_PORT || "5432"),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || process.env.MYSQL_HOST,
+  port: Number.parseInt(process.env.DB_PORT || process.env.MYSQL_PORT || "3306"),
+  user: process.env.DB_USER || process.env.MYSQL_USER,
+  password: process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD,
+  database: process.env.DB_NAME || process.env.MYSQL_DATABASE,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 })
 
 export async function query<T>(sql: string, params?: unknown[]): Promise<T[]> {
-  const client = await pool.connect()
-  try {
-    const result = await client.query(sql, params)
-    return result.rows as T[]
-  } finally {
-    client.release()
-  }
+  const [rows] = await pool.execute(sql, params)
+  return rows as T[]
 }
 
 export async function queryOne<T>(sql: string, params?: unknown[]): Promise<T | null> {
@@ -28,13 +23,8 @@ export async function queryOne<T>(sql: string, params?: unknown[]): Promise<T | 
 }
 
 export async function execute(sql: string, params?: unknown[]) {
-  const client = await pool.connect()
-  try {
-    const result = await client.query(sql, params)
-    return result
-  } finally {
-    client.release()
-  }
+  const [result] = await pool.execute(sql, params)
+  return result
 }
 
 export { pool }
