@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const sessionToken = request.cookies.get("kms_session")?.value;
 
   // Protect admin routes
