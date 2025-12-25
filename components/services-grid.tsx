@@ -5,47 +5,26 @@ import { HardHat, Truck, Mountain, Package, FileText, ArrowRight, Wrench } from 
 
 const services = [
   {
-    icon: HardHat,
-    title: "Construction & Engineering",
+    icon: Wrench,
+    title: "Mechanical Maintenance & Services",
     description:
-      "Top-notch civil engineering services and constructions, from infrastructure development to industrial facilities.",
+      "We specialize in maintaining industrial equipment and infrastructure to ensure optimal performance and longevity. Our mechanical maintenance services cover all types of industrial machinery and equipment.",
+    href: "/services#maintenance",
+    color: "bg-cyan-500/10 text-cyan-600",
+  },
+  {
+    icon: HardHat,
+    title: "Civil & Structure Works",
+    description: "We provide top-notch civil engineering services and structural constructions, from infrastructure development to industrial facilities and building construction.",
     href: "/services#construction",
     color: "bg-blue-500/10 text-blue-600",
   },
   {
-    icon: Truck,
-    title: "Logistics Solutions",
-    description: "Comprehensive logistics and transportation services tailored for mining and industrial operations.",
-    href: "/services#logistics",
-    color: "bg-green-500/10 text-green-600",
-  },
-  {
-    icon: Mountain,
-    title: "Mining Support",
-    description: "Specialized support services for mining operations, including maintenance and technical assistance.",
-    href: "/services#mining",
-    color: "bg-amber-500/10 text-amber-600",
-  },
-  {
     icon: Package,
-    title: "Procurement Services",
-    description: "Efficient procurement and supply chain management for all your industrial needs.",
+    title: "Industrial Supply & Procurement",
+    description: "Efficient procurement and supply chain management for all your industrial needs, ensuring timely delivery and quality products for mining and industrial operations.",
     href: "/services#procurement",
     color: "bg-purple-500/10 text-purple-600",
-  },
-  {
-    icon: FileText,
-    title: "Consulting & Contracting",
-    description: "Expert consulting services and contracting solutions for complex projects.",
-    href: "/services#consulting",
-    color: "bg-rose-500/10 text-rose-600",
-  },
-  {
-    icon: Wrench,
-    title: "Industrial Maintenance",
-    description: "We specialize in maintaining industrial equipment and infrastructure to ensure optimal performance.",
-    href: "/services#maintenance",
-    color: "bg-cyan-500/10 text-cyan-600",
   },
 ]
 

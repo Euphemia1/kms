@@ -7,14 +7,30 @@ import { HardHat, Truck, Mountain, Package, FileText, Wrench, ArrowRight, CheckC
 
 const services = [
   {
+    id: "maintenance",
+    icon: Wrench,
+    title: "Mechanical Maintenance & Services",
+    description:
+      "We specialize in maintaining industrial equipment and infrastructure to ensure optimal performance and longevity. Our mechanical maintenance services cover all types of industrial machinery and equipment.",
+    features: [
+      "Preventive maintenance",
+      "Equipment repairs",
+      "Mechanical system overhauls",
+      "Predictive maintenance",
+      "Equipment installation",
+      "Performance optimization",
+    ],
+    image: "/services/maintenance.jpg",
+  },
+  {
     id: "construction",
     icon: HardHat,
-    title: "Construction & Engineering",
+    title: "Civil & Structure Works",
     description:
-      "We provide top-notch civil engineering services and constructions, from infrastructure development to industrial facilities.",
+      "We provide top-notch civil engineering services and structural constructions, from infrastructure development to industrial facilities and building construction.",
     features: [
       "Civil infrastructure development",
-      "Industrial facility construction",
+      "Building construction",
       "Structural engineering services",
       "Project management",
       "Site preparation and earthworks",
@@ -23,84 +39,20 @@ const services = [
     image: "/services/construction.jpg",
   },
   {
-    id: "logistics",
-    icon: Truck,
-    title: "Logistics Solutions",
-    description:
-      "Comprehensive logistics and transportation services tailored for mining and industrial operations in challenging environments.",
-    features: [
-      "Heavy equipment transportation",
-      "Supply chain management",
-      "Warehousing solutions",
-      "Fleet management",
-      "Cross-border logistics",
-      "Just-in-time delivery services",
-    ],
-    image: "/services/logistics.jpg",
-  },
-  {
-    id: "mining",
-    icon: Mountain,
-    title: "Mining Support",
-    description:
-      "Specialized support services for mining operations, including maintenance, technical assistance, and workforce solutions.",
-    features: [
-      "Mine site maintenance",
-      "Technical consulting",
-      "Equipment support services",
-      "Workforce management",
-      "Safety compliance services",
-      "Environmental management",
-    ],
-    image: "/services/mining.jpg",
-  },
-  {
     id: "procurement",
     icon: Package,
-    title: "Procurement Services",
+    title: "Industrial Supply & Procurement",
     description:
-      "Efficient procurement and supply chain management for all your industrial needs, ensuring timely delivery and quality products.",
+      "Efficient procurement and supply chain management for all your industrial needs, ensuring timely delivery and quality products for mining and industrial operations.",
     features: [
       "Strategic sourcing",
       "Vendor management",
       "Inventory optimization",
-      "Contract negotiations",
+      "Supply chain solutions",
       "Quality inspections",
       "Cost reduction strategies",
     ],
     image: "/services/procurement.jpg",
-  },
-  {
-    id: "consulting",
-    icon: FileText,
-    title: "Consulting & Contracting",
-    description:
-      "Expert consulting services and contracting solutions for complex projects in the mining and industrial sectors.",
-    features: [
-      "Project feasibility studies",
-      "Technical consulting",
-      "Contract management",
-      "Risk assessment",
-      "Regulatory compliance",
-      "Strategic planning",
-    ],
-    image: "/services/consulting.jpg",
-  },
-  {
-    id: "maintenance",
-    icon: Wrench,
-    title: "Industrial Maintenance",
-    description:
-      "We specialize in maintaining industrial equipment and infrastructure to ensure optimal performance and longevity.",
-    features: [
-      "Preventive maintenance",
-      "Equipment repairs",
-      "Facility maintenance",
-      "Painting and housekeeping",
-      "Cement block manufacturing",
-      "Paver production services",
-    ],
-    image: "/services/maintenance.jpg",
   },
 ]
 
