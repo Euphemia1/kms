@@ -1,4 +1,3 @@
-// app/api/auth/login/route.ts
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server"
@@ -6,13 +5,17 @@ import mysql from "mysql2/promise"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 
+// Hardcoded database configuration
 const dbConfig = {
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  port: Number(process.env.MYSQL_PORT || 3306),
-}
+  host: 'srv1682.hstgr.io',
+  user: 'u754414236_kms',
+  password: 'Kmssarl@2025',
+  database: 'u754414236_kms',
+  port: 3306,
+};
+
+// Hardcoded JWT secret
+const JWT_SECRET = '06cd73b65cc986d84756ba2a56c07eb1d7cc1b7a2fbd295478a60b6e8f3c9d8a';
 
 // Sign in function with detailed logging
 async function signIn(email: string, password: string) {
@@ -65,15 +68,10 @@ async function signIn(email: string, password: string) {
       return { success: false, error: "Invalid email or password" }
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.log('❌ JWT_SECRET is missing!');
-      return { success: false, error: "Server misconfiguration: JWT secret missing" }
-    }
-
     console.log('🎫 Generating JWT token...');
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "1h" }
     );
     console.log('✅ JWT token generated successfully');
