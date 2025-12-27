@@ -1,15 +1,21 @@
-const envConfig = require('../env.config.js');
-
-// Then use envConfig.MYSQL_HOST instead of process.env.MYSQL_HOST
 import mysql from "mysql2/promise"
+
+// Hardcoded database configuration
+const dbConfig = {
+  host: 'srv1682.hstgr.io',
+  port: 3306,
+  user: 'u754414236_kms',
+  password: 'Kmssarl@2025',
+  database: 'u754414236_kms'
+};
 
 // Create a connection pool
 const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST,
-  port: Number.parseInt(process.env.MYSQL_PORT || "3306"),
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  password: dbConfig.password,
+  database: dbConfig.database,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
