@@ -5,18 +5,17 @@ import mysql from "mysql2/promise"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 
-
-// Database configuration from environment variables
+// Hardcoded database configuration for Hostinger
 const dbConfig = {
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  port: parseInt(process.env.MYSQL_PORT || "3306"),
+  host: 'srv1682.hstgr.io',
+  user: 'u754414236_kms',
+  password: 'Kmssarl@2025',
+  database: 'u754414236_kms',
+  port: 3306,
 };
 
-// JWT secret from environment variable
-const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
+// Hardcoded JWT secret
+const JWT_SECRET = '06cd73b65cc986d84756ba2a56c07eb1d7cc1b7a2fbd295478a60b6e8f3c9d8a';
 
 // Sign in function with detailed logging
 async function signIn(email: string, password: string) {
