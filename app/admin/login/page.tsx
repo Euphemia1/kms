@@ -17,32 +17,47 @@ export default function AdminLoginPage() {
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  e.preventDefault()
+  setError(null)
+  setLoading(true)
 
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    })
+
+    const rawText = await res.text()
+    console.log("Login response status:", res.status)
+    console.log("Login raw response:", rawText)
+
+    let data: any = {}
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || "Login failed")
-        return
-      }
-
-      router.push("/admin")
-      router.refresh()
+      data = JSON.parse(rawText)
     } catch {
-      setError("An unexpected error occurred")
-    } finally {
-      setLoading(false)
+      setError("❌ Server crashed before sending a response")
+      return
     }
+
+    if (!res.ok) {
+      setError(
+        data?.error ||
+          `❌ Login failed (HTTP ${res.status})`
+      )
+      return
+    }
+
+    router.push("/admin")
+    router.refresh()
+  } catch (err) {
+    console.error("Frontend login error:", err)
+    setError("❌ Network or server error (check console)")
+  } finally {
+    setLoading(false)
   }
+}
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
