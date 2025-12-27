@@ -4,18 +4,21 @@ import { NextResponse } from "next/server"
 import mysql from "mysql2/promise"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
+import dotenv from "dotenv";
 
-// Hardcoded database configuration
+dotenv.config();
+
+// Database configuration from environment variables
 const dbConfig = {
-  host: 'srv1682.hstgr.io',
-  user: 'u754414236_kms',
-  password: 'Kmssarl@2025',
-  database: 'u754414236_kms',
-  port: 3306,
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
+  port: parseInt(process.env.MYSQL_PORT || "3306"),
 };
 
-// Hardcoded JWT secret
-const JWT_SECRET = '06cd73b65cc986d84756ba2a56c07eb1d7cc1b7a2fbd295478a60b6e8f3c9d8a';
+// JWT secret from environment variable
+const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
 
 // Sign in function with detailed logging
 async function signIn(email: string, password: string) {
