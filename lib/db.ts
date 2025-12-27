@@ -1,4 +1,6 @@
-import 'dotenv/config';
+const envConfig = require('../env.config.js');
+
+// Then use envConfig.MYSQL_HOST instead of process.env.MYSQL_HOST
 import mysql from "mysql2/promise"
 
 // Create a connection pool
