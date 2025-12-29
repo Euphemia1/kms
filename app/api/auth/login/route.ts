@@ -3,7 +3,9 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server"
 import { queryOne } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import { createSession, setSessionCookie, signIn as authSignIn } from "@/lib/auth"
+import jwt from "jsonwebtoken"
+
+const JWT_SECRET = '06cd73b65cc986d84756ba2a56c07eb1d7cc1b7a2fbd295478a60b6e8f3c9d8a';
 
 async function signIn(email: string, password: string) {
   console.log('=== SIGNIN FUNCTION STARTED ===');
@@ -16,7 +18,7 @@ async function signIn(email: string, password: string) {
       [email]
     );
     
-    console.log('Query result rows:', user ? 1 : 0);
+    console.log('Query result:', user ? 'User found' : 'No user');
 
     if (!user) {
       console.log('No user found with email:', email);
@@ -39,14 +41,19 @@ async function signIn(email: string, password: string) {
       return { success: false, error: "Invalid email or password" }
     }
 
-    console.log('Creating database session...');
-    const sessionToken = await createSession(user.id);
-    console.log('Database session created successfully');
+    console.log('Generating JWT token...');
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+    console.log('JWT token generated successfully');
 
-    return { success: true, token: sessionToken, user: { id: user.id, email: user.email, role: user.role } }
+    return { success: true, token, user: { id: user.id, email: user.email, role: user.role } }
   } catch (err: any) {
     console.error('=== SIGNIN ERROR ===');
     console.error('Error message:', err.message);
+    console.error('Stack:', err.stack);
     return { success: false, error: "Internal server error: " + err.message }
   }
 }
@@ -73,14 +80,23 @@ export async function POST(request: Request) {
 
     console.log('Login successful, setting cookie...');
 
-    // The signIn function already sets the session cookie
     const response = NextResponse.json({ 
       success: true, 
+      user: result.user,
       message: 'Login successful'
     });
 
+    // Set the JWT token as an httpOnly cookie
+    response.cookies.set('token', result.token || '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: '/',
+    });
+
     console.log('=== LOGIN COMPLETED SUCCESSFULLY ===');
-    console.log('Cookie set with token');
+    console.log('Cookie set with JWT token');
     return response;
     
   } catch (error: any) {
@@ -89,4 +105,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Internal server error: " + error.message }, { status: 500 })
   }
 }
-
