@@ -2,7 +2,7 @@ import mysql from "mysql2/promise"
 
 // Hardcoded database configuration for live server
 const dbConfig = {
-  host: 'srv1682.hstgr.io',
+  host: 'localhost',
   port: 3306,
   user: 'u754414236_kms',
   password: 'Kmssarl@2025',
