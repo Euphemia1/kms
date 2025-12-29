@@ -19,7 +19,7 @@ interface Session {
 }
 
 const SESSION_COOKIE_NAME = "kms_session"
-const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
+const SESSION_DURATION = 300 * 60 * 1000 // 300 minutes
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10)
@@ -58,6 +58,12 @@ export async function getSession(): Promise<{ user: AdminUser; session: Session 
 
   if (!session) return null
 
+  // Check if the session has expired
+  if (new Date(session.expires_at) < new Date()) {
+    await execute("DELETE FROM sessions WHERE id = ?", [session.id])
+    return null
+  }
+
   return {
     user: {
       id: session.user_id,
@@ -94,6 +100,8 @@ export async function signIn(
   }
 
   const token = await createSession(user.id)
+  await setSessionCookie(token) // Ensure the session cookie is set
+
   return { success: true, token }
 }
 
@@ -117,6 +125,47 @@ export async function setSessionCookie(token: string) {
   })
 }
 
+// Add this new function to your existing auth.ts file:
+export async function verifySessionInMiddleware(sessionToken: string): Promise<{ user: AdminUser; session: Session } | null> {
+  if (!sessionToken) return null
+
+  try {
+    const session = await queryOne<Session & AdminUser>(
+      `SELECT s.*, u.email, u.full_name, u.role, u.avatar_url 
+       FROM sessions s 
+       JOIN admin_users u ON s.user_id = u.id 
+       WHERE s.token = ? AND s.expires_at > NOW()`,
+      [sessionToken],
+    )
+
+    if (!session) return null
+
+    // Check if the session has expired
+    if (new Date(session.expires_at) < new Date()) {
+      await execute("DELETE FROM sessions WHERE id = ?", [session.id])
+      return null
+    }
+
+    return {
+      user: {
+        id: session.user_id,
+        email: session.email,
+        full_name: session.full_name,
+        role: session.role,
+        avatar_url: session.avatar_url,
+      },
+      session: {
+        id: session.id,
+        user_id: session.user_id,
+        token: session.token,
+        expires_at: session.expires_at,
+      },
+    }
+  } catch (error) {
+    console.error("Session verification error:", error)
+    return null
+  }
+}
 export async function clearSessionCookie() {
   const cookieStore = await cookies()
   cookieStore.delete(SESSION_COOKIE_NAME)

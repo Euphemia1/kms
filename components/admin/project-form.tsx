@@ -82,6 +82,7 @@ export function ProjectForm({ project }: { project?: Project }) {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
+        credentials: 'same-origin',
         body: JSON.stringify(formData),
       })
 

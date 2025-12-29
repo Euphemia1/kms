@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,50 +13,53 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setError(null)
-  setLoading(true)
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
 
-  try {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    })
-
-    const rawText = await res.text()
-    console.log("Login response status:", res.status)
-    console.log("Login raw response:", rawText)
-
-    let data: any = {}
     try {
-      data = JSON.parse(rawText)
-    } catch {
-      setError("❌ Server crashed before sending a response")
-      return
-    }
+      console.log('🚀 Frontend: Submitting login form...')
+      console.log('📧 Frontend: Email:', email)
+      
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      })
 
-    if (!res.ok) {
-      setError(
-        data?.error ||
-          `❌ Login failed (HTTP ${res.status})`
-      )
-      return
-    }
+      console.log('📡 Frontend: Response status:', res.status)
+      console.log('📡 Frontend: Response ok:', res.ok)
 
-    router.push("/admin")
-    router.refresh()
-  } catch (err) {
-    console.error("Frontend login error:", err)
-    setError("❌ Network or server error (check console)")
-  } finally {
-    setLoading(false)
+      const data = await res.json()
+      console.log("📦 Frontend: Login response data:", data)
+
+      if (!res.ok) {
+        console.error('❌ Frontend: Response not OK')
+        throw new Error(data.error || `Login failed (HTTP ${res.status})`)
+      }
+
+      if (data.success) {
+        console.log('✅ Frontend: Login successful!')
+        console.log('🔄 Frontend: About to redirect to /admin/dashboard')
+        
+        // Hard redirect to ensure cookie is properly recognized
+      window.location.href = "/admin"
+
+        
+        console.log('🔄 Frontend: Redirect called (if you see this, redirect failed)')
+      } else {
+        console.error('❌ Frontend: data.success is false')
+        throw new Error(data.error || "Login failed")
+      }
+    } catch (err) {
+      console.error("❌ Frontend: Login error:", err)
+      setError(err instanceof Error ? err.message : "Network or server error")
+      setLoading(false)
+    }
   }
-}
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 import { query, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
@@ -26,46 +27,65 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // Get session - this returns { user, session } or null
+    const sessionData = await getSession();
+    
+    // Debug logs
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("kms_session");
+    console.log("Session Cookie:", sessionCookie?.value);
+    console.log("Session Data:", sessionData);
+
+    // Check authorization - note the correct path to role
+    if (!sessionData || sessionData.user.role !== "admin") {
+      return NextResponse.json({ 
+        error: "Unauthorized",
+        debug: {
+          hasSession: !!sessionData,
+          role: sessionData?.user?.role
+        }
+      }, { status: 401 });
     }
 
-    const data = await request.json()
+    // Get request data
+    const data = await request.json();
 
-   await execute(
-  `INSERT INTO projects (
-    id, title, slug, description, full_description, category,
-    client, location, start_date, end_date, status,
-    featured_image, is_featured, is_published, created_by
-  )
-  VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  [
-    data.title,
-    data.slug,
-    data.description,
-    data.full_description,
-    data.category,
-    data.client,
-    data.location,
-    data.start_date,
-    data.end_date,
-    data.status,
-    data.featured_image,
-    data.is_featured,
-    data.is_published,
-    data.created_by
-  ]
-);
+    // Insert project
+    await execute(
+      `INSERT INTO projects (
+        id, title, slug, description, full_description, category,
+        client, location, start_date, end_date, status,
+        featured_image, is_featured, is_published, created_by
+      )
+      VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        data.title,
+        data.slug,
+        data.description,
+        data.full_description,
+        data.category,
+        data.client,
+        data.location,
+        data.start_date,
+        data.end_date,
+        data.status,
+        data.featured_image,
+        data.is_featured,
+        data.is_published,
+        data.created_by
+      ]
+    );
 
-    
     // Revalidate the projects page
-    revalidatePath('/projects')
-    revalidatePath('/admin/projects')
-    
-    return NextResponse.json({ success: true })
+    revalidatePath('/projects');
+    revalidatePath('/admin/projects');
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error creating project:", error)
-    return NextResponse.json({ error: "Failed to create project" }, { status: 500 })
+    console.error("Error creating project:", error);
+    return NextResponse.json({ 
+      error: "Failed to create project",
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
   }
 }

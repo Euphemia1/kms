@@ -1,3 +1,4 @@
+export const runtime = "nodejs"; 
 import { NextResponse } from "next/server"
 import { query, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"

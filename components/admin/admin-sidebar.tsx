@@ -10,14 +10,11 @@ import {
   Newspaper,
   Briefcase,
   Users,
-  MessageSquare,
   Settings,
   LogOut,
   Wrench,
-  Handshake,
   ChevronLeft,
   ChevronRight,
-  ImageIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
@@ -30,11 +27,8 @@ const navItems = [
   { href: "/admin/services", label: "Services", icon: Wrench },
   { href: "/admin/careers", label: "Careers", icon: Briefcase },
   { href: "/admin/applications", label: "Applications", icon: Users },
-  { href: "/admin/contacts", label: "Messages", icon: MessageSquare },
-  { href: "/admin/partners", label: "Partners", icon: Handshake },
-  { href: "/admin/team", label: "Team", icon: Users },
-  { href: "/admin/media", label: "Media Library", icon: ImageIcon },
   { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: "/admin/add-admin", label: "Add Admin", icon: Users },
 ]
 
 export function AdminSidebar() {
@@ -53,7 +47,7 @@ export function AdminSidebar() {
       <aside
         className={cn(
           "fixed left-0 top-0 z-40 h-screen bg-card border-r border-border transition-all duration-300",
-          collapsed ? "w-[70px]" : "w-64",
+          collapsed ? "w-17.5" : "w-64",
         )}
       >
         <div className="flex flex-col h-full">
@@ -77,31 +71,20 @@ export function AdminSidebar() {
                 const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))
                 const Icon = item.icon
 
-                const linkContent = (
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                    )}
-                  >
-                    <Icon className="h-5 w-5 shrink-0" />
-                    {!collapsed && <span>{item.label}</span>}
-                  </Link>
-                )
-
                 return (
                   <li key={item.href}>
-                    {collapsed ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                        <TooltipContent side="right">{item.label}</TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      linkContent
-                    )}
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                      )}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      {!collapsed && <span>{item.label}</span>}
+                    </Link>
                   </li>
                 )
               })}
