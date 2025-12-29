@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Revalidate every hour for production
 
 import { query } from "@/lib/db"
 import { Navigation } from "@/components/navigation"
