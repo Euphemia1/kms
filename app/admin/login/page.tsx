@@ -46,9 +46,8 @@ export default function AdminLoginPage() {
         console.log('🔄 Frontend: About to redirect to /admin/dashboard')
         
         // Hard redirect to ensure cookie is properly recognized
-      window.location.href = "/admin"
+        window.location.href = "/admin"
 
-        
         console.log('🔄 Frontend: Redirect called (if you see this, redirect failed)')
       } else {
         console.error('❌ Frontend: data.success is false')

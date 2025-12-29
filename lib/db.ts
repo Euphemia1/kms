@@ -1,12 +1,12 @@
 import mysql from "mysql2/promise"
 
-// Database configuration using environment variables
+// Hardcoded database configuration for live server
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'kms-sarl'
+  host: 'srv1682.hstgr.io',
+  port: 3306,
+  user: 'u754414236_kms',
+  password: 'Kmssarl@2025',
+  database: 'u754414236_kms'
 };
 
 // Create a connection pool
@@ -19,13 +19,18 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  connectTimeout: 60000, // 60 seconds
-  ssl: process.env.DB_SSL ? { rejectUnauthorized: false } : undefined,
 })
 
 export async function query<T>(sql: string, params?: unknown[]): Promise<T[]> {
-  const [rows] = await pool.execute(sql, params)
-  return rows as T[]
+  try {
+    const [rows] = await pool.execute(sql, params)
+    return rows as T[]
+  } catch (error) {
+    console.error('❌ Database query error:', error)
+    console.error('SQL:', sql)
+    console.error('Params:', params)
+    throw error
+  }
 }
 
 export async function queryOne<T>(sql: string, params?: unknown[]): Promise<T | null> {
@@ -34,8 +39,15 @@ export async function queryOne<T>(sql: string, params?: unknown[]): Promise<T | 
 }
 
 export async function execute(sql: string, params?: unknown[]) {
-  const [result] = await pool.execute(sql, params)
-  return result
+  try {
+    const [result] = await pool.execute(sql, params)
+    return result
+  } catch (error) {
+    console.error('❌ Database execute error:', error)
+    console.error('SQL:', sql)
+    console.error('Params:', params)
+    throw error
+  }
 }
 
 export { pool }

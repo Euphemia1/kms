@@ -5,8 +5,6 @@ import { queryOne } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { createSession, setSessionCookie, signIn as authSignIn } from "@/lib/auth"
 
-
-
 async function signIn(email: string, password: string) {
   console.log('=== SIGNIN FUNCTION STARTED ===');
   console.log('Email:', email);
@@ -65,7 +63,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 })
     }
 
-    const result = await authSignIn(email, password);
+    const result = await signIn(email, password);
     console.log('signIn result:', { success: result.success, hasToken: !!result.token });
 
     if (!result.success) {
@@ -91,3 +89,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Internal server error: " + error.message }, { status: 500 })
   }
 }
+
