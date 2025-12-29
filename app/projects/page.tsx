@@ -33,7 +33,7 @@ async function getProjects() {
       headers: {
         'Content-Type': 'application/json',
       },
-      cache: 'no-store', // Don't cache to ensure fresh data
+      next: { revalidate: 3600 }, // Revalidate every hour for production
     });
     
     if (!res.ok) {
