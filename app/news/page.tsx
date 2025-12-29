@@ -1,4 +1,4 @@
-export const revalidate = 3600; // Revalidate every hour for production
+export const dynamic = 'force-static'; // Enable static generation with fallback
 
 import { query } from "@/lib/db"
 import { Navigation } from "@/components/navigation"
@@ -7,6 +7,7 @@ import { ScrollAnimation } from "@/components/scroll-animation"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, User, ArrowRight } from "lucide-react"
 import Link from "next/link"
+
 
 interface NewsArticle {
   id: string
@@ -21,8 +22,13 @@ interface NewsArticle {
 }
 
 async function getNews() {
-  const news = await query<NewsArticle>("SELECT * FROM news WHERE is_published = TRUE ORDER BY published_at DESC")
-  return news
+  try {
+    const news = await query<NewsArticle>("SELECT * FROM news WHERE is_published = TRUE ORDER BY published_at DESC")
+    return news
+  } catch (error) {
+    console.warn('Failed to fetch news:', error)
+    return []
+  }
 }
 
 export default async function NewsPage() {

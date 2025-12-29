@@ -3,6 +3,8 @@ import { Footer } from "@/components/footer"
 import { ScrollAnimation } from "@/components/scroll-animation"
 import { ProjectsPageClient } from "@/components/projects-page-client"
 
+export const dynamic = 'force-static'; // Enable static generation with fallback
+
 interface Project {
   id: string
   title: string
@@ -69,8 +71,24 @@ async function getStats() {
 }
 
 export default async function ProjectsPage() {
-  const projects = await getProjects()
-  const stats = await getStats()
+  let projects = []
+  let stats = {}
+  
+  // Only fetch data if we're not in a static generation context
+  try {
+    projects = await getProjects()
+    stats = await getStats()
+  } catch (error) {
+    console.warn('Failed to fetch projects:', error)
+    // Use fallback values
+    projects = []
+    stats = {
+      "projects_completed": "200",
+      "years_experience": "15",
+      "team_size": "50",
+      "clients_served": "75"
+    }
+  }
 
   return (
     <main className="min-h-screen">

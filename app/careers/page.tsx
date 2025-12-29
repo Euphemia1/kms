@@ -1,5 +1,5 @@
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-static'; // Enable static generation with fallback
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { ScrollAnimation } from "@/components/scroll-animation"
@@ -68,7 +68,16 @@ async function getJobs() {
 }
 
 export default async function CareersPage() {
-  const jobs = await getJobs()
+  let jobs = []
+  
+  // Only fetch data if we're not in a static generation context
+  try {
+    jobs = await getJobs()
+  } catch (error) {
+    console.warn('Failed to fetch jobs:', error)
+    // Use fallback values
+    jobs = []
+  }
 
   return (
     <main className="min-h-screen">
