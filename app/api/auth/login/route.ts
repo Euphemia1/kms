@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken"
 
 // Hardcoded database configuration for Hostinger
 const dbConfig = {
-  host: 'srv1682.hstgr.io',
+  host: 'localhost',
   user: 'u754414236_kms',
   password: 'Kmssarl@2025',
   database: 'u754414236_kms',
