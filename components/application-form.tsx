@@ -24,6 +24,8 @@ export function ApplicationForm({ jobs }: { jobs: Job[] }) {
     job_title: "",
     cover_letter: "",
   })
+  const [file, setFile] = useState<File | null>(null)
+  const [fileName, setFileName] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
@@ -57,17 +59,21 @@ export function ApplicationForm({ jobs }: { jobs: Job[] }) {
     setIsSubmitting(true)
 
     try {
+      const formDataToSend = new FormData()
+      formDataToSend.append("job_id", formData.job_id || "")
+      formDataToSend.append("job_title", formData.job_title || "General Application")
+      formDataToSend.append("full_name", formData.full_name)
+      formDataToSend.append("email", formData.email)
+      formDataToSend.append("phone", formData.phone)
+      formDataToSend.append("cover_letter", formData.cover_letter)
+      
+      if (file) {
+        formDataToSend.append("resume", file)
+      }
+
       const res = await fetch("/api/applications", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          job_id: formData.job_id || null,
-          job_title: formData.job_title || "General Application",
-          full_name: formData.full_name,
-          email: formData.email,
-          phone: formData.phone,
-          cover_letter: formData.cover_letter,
-        }),
+        body: formDataToSend,
       })
 
       if (!res.ok) throw new Error("Failed to submit")
@@ -81,6 +87,8 @@ export function ApplicationForm({ jobs }: { jobs: Job[] }) {
         job_title: "",
         cover_letter: "",
       })
+      setFile(null)
+      setFileName("")
     } catch (error) {
       console.error("Error submitting application:", error)
       alert("There was an error submitting your application. Please try again.")
@@ -204,10 +212,27 @@ export function ApplicationForm({ jobs }: { jobs: Job[] }) {
 
               <div className="space-y-2">
                 <Label className="text-background">Resume / CV</Label>
-                <div className="border-2 border-dashed border-background/20 rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                <div 
+                  className="border-2 border-dashed border-background/20 rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-background/10"
+                  onClick={() => document.getElementById('fileInput')?.click()}
+                >
                   <Upload className="w-10 h-10 mx-auto mb-4 text-background/50" />
-                  <p className="text-background/70 text-sm">Drag and drop your resume here, or click to browse</p>
+                  <p className="text-background/70 text-sm">{fileName || 'Drag and drop your resume here, or click to browse'}</p>
                   <p className="text-background/50 text-xs mt-2">PDF, DOC, or DOCX (max 5MB)</p>
+                  <input
+                    id="fileInput"
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => {
+                      const selectedFile = e.target.files?.[0]
+                      if (selectedFile) {
+                        setFile(selectedFile)
+                        setFileName(selectedFile.name)
+                      }
+                    }}
+                    aria-label="Upload resume file"
+                  />
                 </div>
               </div>
 

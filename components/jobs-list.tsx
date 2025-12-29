@@ -14,9 +14,14 @@ interface Job {
   location: string
   employment_type: string
   experience_level: string
+  salary_range: string
   description: string
-  requirements: string[]
-  responsibilities: string[]
+  requirements: string[] | string // Can be JSON string or parsed array
+  responsibilities: string[] | string // Can be JSON string or parsed array
+  benefits: string[] | string // Can be JSON string or parsed array
+  is_active: boolean
+  application_deadline: string | null
+  created_at: string
 }
 
 export function JobsList({ jobs }: { jobs: Job[] }) {
@@ -85,11 +90,11 @@ export function JobsList({ jobs }: { jobs: Job[] }) {
                     <div className="px-6 pb-6 pt-2 border-t border-border">
                       <p className="text-muted-foreground mb-4">{job.description}</p>
 
-                      {job.requirements && job.requirements.length > 0 && (
+                      {job.requirements && (
                         <>
                           <h4 className="font-semibold mb-2">Requirements:</h4>
                           <ul className="space-y-2 mb-6">
-                            {job.requirements.map((req, i) => (
+                            {(Array.isArray(job.requirements) ? job.requirements : [job.requirements]).map((req: string, i: number) => (
                               <li key={i} className="flex items-start gap-2 text-sm">
                                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                                 {req}
@@ -99,11 +104,11 @@ export function JobsList({ jobs }: { jobs: Job[] }) {
                         </>
                       )}
 
-                      {job.responsibilities && job.responsibilities.length > 0 && (
+                      {job.responsibilities && (
                         <>
                           <h4 className="font-semibold mb-2">Responsibilities:</h4>
                           <ul className="space-y-2 mb-6">
-                            {job.responsibilities.map((resp, i) => (
+                            {(Array.isArray(job.responsibilities) ? job.responsibilities : [job.responsibilities]).map((resp: string, i: number) => (
                               <li key={i} className="flex items-start gap-2 text-sm">
                                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                                 {resp}

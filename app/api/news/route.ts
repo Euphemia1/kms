@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server"
 import { query, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"
+import { v4 as uuidv4 } from "uuid"
 
 interface NewsArticle {
   id: string
@@ -34,10 +35,12 @@ export async function POST(request: Request) {
 
     const data = await request.json()
 
+    const newsId = uuidv4();
     await execute(
       `INSERT INTO news (id, title, slug, excerpt, content, category, featured_image, author_id, author_name, is_featured, is_published, published_at) 
-       VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        newsId,
         data.title,
         data.slug,
         data.excerpt || null,

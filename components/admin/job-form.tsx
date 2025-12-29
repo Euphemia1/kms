@@ -25,6 +25,8 @@ interface JobPosting {
   description: string
   requirements: string[]
   responsibilities: string[]
+  benefits?: string[]
+  application_deadline?: string | null
   is_active: boolean
 }
 
@@ -39,11 +41,18 @@ const defaultJob: JobPosting = {
   description: "",
   requirements: [""],
   responsibilities: [""],
+  benefits: [""],
   is_active: true,
 }
 
 export function JobForm({ job }: { job?: JobPosting }) {
-  const [formData, setFormData] = useState<JobPosting>(job || defaultJob)
+  const [formData, setFormData] = useState<JobPosting>(() => {
+    const baseData = job || defaultJob;
+    return {
+      ...baseData,
+      benefits: baseData.benefits || [""]
+    };
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -66,24 +75,24 @@ export function JobForm({ job }: { job?: JobPosting }) {
     }))
   }
 
-  const addListItem = (field: "requirements" | "responsibilities") => {
+  const addListItem = (field: "requirements" | "responsibilities" | "benefits") => {
     setFormData((prev) => ({
       ...prev,
       [field]: [...(prev[field] || []), ""],
     }))
   }
 
-  const removeListItem = (field: "requirements" | "responsibilities", index: number) => {
+  const removeListItem = (field: "requirements" | "responsibilities" | "benefits", index: number) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: prev[field].filter((_, i) => i !== index),
+      [field]: (prev[field] || []).filter((_, i) => i !== index),
     }))
   }
 
-  const updateListItem = (field: "requirements" | "responsibilities", index: number, value: string) => {
+  const updateListItem = (field: "requirements" | "responsibilities" | "benefits", index: number, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: prev[field].map((item, i) => (i === index ? value : item)),
+      [field]: (prev[field] || []).map((item, i) => (i === index ? value : item)),
     }))
   }
 
@@ -97,6 +106,7 @@ export function JobForm({ job }: { job?: JobPosting }) {
         ...formData,
         requirements: formData.requirements.filter((r) => r.trim() !== ""),
         responsibilities: formData.responsibilities.filter((r) => r.trim() !== ""),
+        benefits: formData.benefits?.filter((b) => b.trim() !== "") || [],
       }
 
       const url = isEditing ? `/api/jobs/${job.id}` : "/api/jobs"
@@ -222,6 +232,32 @@ export function JobForm({ job }: { job?: JobPosting }) {
                       variant="ghost"
                       size="icon"
                       onClick={() => removeListItem("responsibilities", index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Benefits</Label>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => addListItem("benefits")}>
+                    <Plus className="h-4 w-4 mr-1" /> Add
+                  </Button>
+                </div>
+                {formData.benefits?.map((benefit, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={benefit}
+                      onChange={(e) => updateListItem("benefits", index, e.target.value)}
+                      placeholder="Enter benefit..."
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeListItem("benefits", index)}
                     >
                       <X className="h-4 w-4" />
                     </Button>

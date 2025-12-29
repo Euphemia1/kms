@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server"
 import { query, execute } from "@/lib/db"
+import { v4 as uuidv4 } from "uuid"
 
 interface Application {
   id: string
@@ -27,18 +28,37 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json()
+    const formData = await request.formData();
+    
+    const job_id = formData.get('job_id') as string || null;
+    const job_title = formData.get('job_title') as string || null;
+    const full_name = formData.get('full_name') as string;
+    const email = formData.get('email') as string;
+    const phone = formData.get('phone') as string || null;
+    const cover_letter = formData.get('cover_letter') as string || null;
+    const resume = formData.get('resume') as File | null;
+    
+    // Process the file if it exists
+    let resume_path: string | null = null;
+    if (resume) {
+      // In a real implementation, you would upload the file to storage
+      // For now, we'll just store the filename
+      resume_path = `/uploads/resumes/${resume.name}`;
+    }
 
+    const applicationId = uuidv4();
     await execute(
-      `INSERT INTO job_applications (id, job_id, job_title, full_name, email, phone, cover_letter) 
-       VALUES (UUID(), ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO job_applications (id, job_id, job_title, full_name, email, phone, cover_letter, resume_url) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        data.job_id || null,
-        data.job_title || null,
-        data.full_name,
-        data.email,
-        data.phone || null,
-        data.cover_letter || null,
+        applicationId,
+        job_id,
+        job_title,
+        full_name,
+        email,
+        phone,
+        cover_letter,
+        resume_path,
       ],
     )
 

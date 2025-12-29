@@ -1,17 +1,9 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server"
-import mysql from "mysql2/promise"
+import { queryOne } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import { createSession, setSessionCookie } from "@/lib/auth"
-
-const dbConfig = {
-  host: 'srv1682.hstgr.io',
-  user: 'u754414236_kms',
-  password: 'Kmssarl@2025',
-  database: 'u754414236_kms',
-  port: 3306,
-};
+import { createSession, setSessionCookie, signIn as authSignIn } from "@/lib/auth"
 
 
 
@@ -19,25 +11,20 @@ async function signIn(email: string, password: string) {
   console.log('=== SIGNIN FUNCTION STARTED ===');
   console.log('Email:', email);
 
-  let connection;
   try {
-    console.log('Attempting database connection...');
-    connection = await mysql.createConnection(dbConfig);
-    console.log('Database connected successfully!');
-
     console.log('Querying admin_users table...');
-    const [rows]: any = await connection.execute(
-      "SELECT * FROM admin_users WHERE email = ? LIMIT 1",
+    const user = await queryOne<{ id: string; email: string; password_hash: string; role: string }>(
+      "SELECT id, email, password_hash, role FROM admin_users WHERE email = ? LIMIT 1",
       [email]
     );
-    console.log('Query result rows:', rows.length);
+    
+    console.log('Query result rows:', user ? 1 : 0);
 
-    if (!rows.length) {
+    if (!user) {
       console.log('No user found with email:', email);
       return { success: false, error: "Invalid email or password" }
     }
 
-    const user = rows[0];
     console.log('User found:', {
       id: user.id,
       email: user.email,
@@ -63,11 +50,6 @@ async function signIn(email: string, password: string) {
     console.error('=== SIGNIN ERROR ===');
     console.error('Error message:', err.message);
     return { success: false, error: "Internal server error: " + err.message }
-  } finally {
-    if (connection) {
-      await connection.end();
-      console.log('Database connection closed');
-    }
   }
 }
 
@@ -83,7 +65,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 })
     }
 
-    const result = await signIn(email, password);
+    const result = await authSignIn(email, password);
     console.log('signIn result:', { success: result.success, hasToken: !!result.token });
 
     if (!result.success) {
@@ -93,18 +75,10 @@ export async function POST(request: Request) {
 
     console.log('Login successful, setting cookie...');
 
+    // The signIn function already sets the session cookie
     const response = NextResponse.json({ 
       success: true, 
-      user: result.user,
       message: 'Login successful'
-    });
-
-    response.cookies.set('token', result.token || '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60,
-      path: '/',
     });
 
     console.log('=== LOGIN COMPLETED SUCCESSFULLY ===');

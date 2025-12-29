@@ -1,7 +1,6 @@
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { ScrollAnimation } from "@/components/scroll-animation"
-import { query } from "@/lib/db"
 import { ProjectsPageClient } from "@/components/projects-page-client"
 
 interface Project {
@@ -9,15 +8,17 @@ interface Project {
   title: string
   slug: string
   description: string
-  full_description: string
+  full_description: string | null
   category: string
-  client: string
-  location: string
-  start_date: string
-  end_date: string
+  client: string | null
+  location: string | null
+  start_date: string | null
+  end_date: string | null
   status: string
-  featured_image: string
+  featured_image: string | null
   is_featured: boolean
+  is_published: boolean
+  created_at: string
 }
 
 interface SiteSetting {
@@ -26,55 +27,33 @@ interface SiteSetting {
 }
 
 async function getProjects() {
-  // Mock data for projects
-  const projects: Project[] = [
-    {
-      id: "1",
-      title: "Mutanda Mining Expansion Project",
-      slug: "mutanda-mining-expansion",
-      description: "Expansion of mining operations at Mutanda site with increased processing capacity.",
-      full_description: "Comprehensive expansion of the Mutanda Mining facility including new processing units, upgraded infrastructure, and enhanced safety systems. This project demonstrates our capability in large-scale mining operations.",
-      category: "mining",
-      client: "Mutanda Mining SA",
-      location: "Katanga Province, DRC",
-      start_date: "2023-01-15",
-      end_date: "2024-12-15",
-      status: "ongoing",
-      featured_image: "/services/mining.jpg",
-      is_featured: true
-    },
-    {
-      id: "2",
-      title: "Kamoto Copper Infrastructure Upgrade",
-      slug: "kamoto-copper-infrastructure",
-      description: "Complete infrastructure overhaul for Kamoto Copper processing facility.",
-      full_description: "Modernization of the Kamoto Copper Company's infrastructure including electrical systems, water treatment facilities, and transportation networks. This project showcases our expertise in industrial infrastructure development.",
-      category: "construction",
-      client: "Kamoto Copper Company",
-      location: "Lualaba Province, DRC",
-      start_date: "2022-03-10",
-      end_date: "2023-11-30",
-      status: "completed",
-      featured_image: "/services/construction.jpg",
-      is_featured: true
-    },
-    {
-      id: "3",
-      title: "Kolwezi Logistics Hub",
-      slug: "kolwezi-logistics-hub",
-      description: "Development of a state-of-the-art logistics hub for mining operations.",
-      full_description: "Design and construction of a comprehensive logistics hub to support mining operations in the region. The facility includes warehousing, fleet maintenance, and administrative offices.",
-      category: "logistics",
-      client: "Regional Mining Consortium",
-      location: "Kolwezi, Lualaba Province, DRC",
-      start_date: "2023-06-01",
-      end_date: "2024-08-30",
-      status: "ongoing",
-      featured_image: "/services/logistics.jpg",
-      is_featured: false
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/projects`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store', // Don't cache to ensure fresh data
+    });
+    
+    if (!res.ok) {
+      console.error('Failed to fetch projects:', res.status, res.statusText);
+      // Return empty array instead of mock data
+      return [];
     }
-  ];
-  return projects;
+    
+    const projects = await res.json();
+    
+    // Ensure projects are properly formatted
+    return projects.map((project: any) => ({
+      ...project,
+      featured_image: project.featured_image || "/placeholder.svg", // Provide a default image if none exists
+    }));
+    
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    return [];
+  }
 }
 
 async function getStats() {

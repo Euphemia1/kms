@@ -29,8 +29,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params
     const data = await request.json()
 
+    // Convert objects to JSON strings for JSON columns
+    const requirements = typeof data.requirements === 'object' && data.requirements !== null ? JSON.stringify(data.requirements) : data.requirements;
+    const responsibilities = typeof data.responsibilities === 'object' && data.responsibilities !== null ? JSON.stringify(data.responsibilities) : data.responsibilities;
+    const benefits = typeof data.benefits === 'object' && data.benefits !== null ? JSON.stringify(data.benefits) : data.benefits;
+    
     await execute(
-      `UPDATE job_postings SET title = ?, slug = ?, department = ?, location = ?, employment_type = ?, experience_level = ?, salary_range = ?, description = ?, requirements = ?, responsibilities = ?, is_active = ? WHERE id = ?`,
+      `UPDATE job_postings SET title = ?, slug = ?, department = ?, location = ?, employment_type = ?, experience_level = ?, salary_range = ?, description = ?, requirements = ?, responsibilities = ?, benefits = ?, application_deadline = ?, is_active = ? WHERE id = ?`,
       [
         data.title,
         data.slug,
@@ -40,8 +45,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         data.experience_level || null,
         data.salary_range || null,
         data.description || null,
-        JSON.stringify(data.requirements || []),
-        JSON.stringify(data.responsibilities || []),
+        requirements,
+        responsibilities,
+        benefits || null,
+        data.application_deadline || null,
         data.is_active ? 1 : 0,
         id,
       ],

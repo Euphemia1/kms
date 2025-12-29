@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server"
 import { query, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"
+import { v4 as uuidv4 } from "uuid"
 
 export async function GET() {
   try {
@@ -23,10 +24,11 @@ export async function PUT(request: Request) {
     const data = await request.json()
 
     for (const [key, value] of Object.entries(data)) {
+      const settingId = uuidv4();
       await execute(
-        `INSERT INTO site_settings (id, setting_key, setting_value) VALUES (UUID(), ?, ?) 
+        `INSERT INTO site_settings (id, setting_key, setting_value) VALUES (?, ?, ?) 
          ON DUPLICATE KEY UPDATE setting_value = ?`,
-        [key, value as string, value as string],
+        [settingId, key, value as string, value as string],
       )
     }
 

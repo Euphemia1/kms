@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { query, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { v4 as uuidv4 } from "uuid"
 
 export async function GET() {
   try {
@@ -22,14 +23,22 @@ export async function POST(request: Request) {
 
     const data = await request.json()
 
+    const jobId = uuidv4();
+    
+    // Convert objects to JSON strings for JSON columns
+    const requirements = typeof data.requirements === 'object' && data.requirements !== null ? JSON.stringify(data.requirements) : data.requirements;
+    const responsibilities = typeof data.responsibilities === 'object' && data.responsibilities !== null ? JSON.stringify(data.responsibilities) : data.responsibilities;
+    const benefits = typeof data.benefits === 'object' && data.benefits !== null ? JSON.stringify(data.benefits) : data.benefits;
+    
     await execute(
   `INSERT INTO job_postings (
     id, title, slug, department, location, employment_type,
     experience_level, salary_range, description, requirements,
-    responsibilities, is_active
+    responsibilities, benefits, is_active, application_deadline
   )
-  VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   [
+    jobId,
     data.title,
     data.slug,
     data.department,
@@ -38,9 +47,11 @@ export async function POST(request: Request) {
     data.experience_level,
     data.salary_range,
     data.description,
-    data.requirements,
-    data.responsibilities,
-    data.is_active
+    requirements,
+    responsibilities,
+    benefits || null,
+    data.is_active,
+    data.application_deadline || null
   ]
 );
 

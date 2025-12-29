@@ -130,11 +130,7 @@ export default function AdminLoginPage() {
               </Button>
             </form>
 
-            <div className="mt-4 p-3 bg-muted rounded-lg text-sm">
-              <p className="font-medium">Default credentials:</p>
-              <p className="text-muted-foreground">Email: admin@kmssarl.org</p>
-              <p className="text-muted-foreground">Password: admin123</p>
-            </div>
+
           </CardContent>
         </Card>
 

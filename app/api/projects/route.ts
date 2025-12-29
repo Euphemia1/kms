@@ -3,6 +3,11 @@ import { cookies } from "next/headers"
 import { query, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { v4 as uuidv4 } from "uuid"
+import { writeFile } from "fs/promises"
+import { join } from "path"
+import { tmpdir } from "os"
+
 
 interface Project {
   id: string
@@ -15,9 +20,10 @@ interface Project {
   created_at: string
 }
 
+
 export async function GET() {
   try {
-    const projects = await query<Project>("SELECT * FROM projects ORDER BY created_at DESC")
+    const projects = await query<Project>("SELECT * FROM projects WHERE is_published = TRUE ORDER BY created_at DESC")
     return NextResponse.json(projects)
   } catch (error) {
     console.error("Error fetching projects:", error)
@@ -25,31 +31,68 @@ export async function GET() {
   }
 }
 
+
 export async function POST(request: Request) {
   try {
     // Get session - this returns { user, session } or null
-    const sessionData = await getSession();
+    const session = await getSession();
     
-    // Debug logs
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("kms_session");
-    console.log("Session Cookie:", sessionCookie?.value);
-    console.log("Session Data:", sessionData);
-
-    // Check authorization - note the correct path to role
-    if (!sessionData || sessionData.user.role !== "admin") {
-      return NextResponse.json({ 
-        error: "Unauthorized",
-        debug: {
-          hasSession: !!sessionData,
-          role: sessionData?.user?.role
-        }
-      }, { status: 401 });
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get request data
-    const data = await request.json();
+    let data;
+    let featured_image_url: string | null = null;
+    
+    // Check if request is multipart/form-data (file upload)
+    const contentType = request.headers.get('content-type');
+    if (contentType && contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      
+      // Process image file if present
+      const imageFile = formData.get('featured_image_file') as File | null;
+      if (imageFile) {
+        // Convert file to buffer
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        
+        const fileName = `${Date.now()}-${imageFile.name}`;
+        const filePath = join(process.cwd(), 'public', 'uploads', 'projects', fileName);
+        
+        try {
+          // Write file to public directory so it can be served
+          await writeFile(filePath, buffer);
+          featured_image_url = `/uploads/projects/${fileName}`;
+          console.log(`File saved successfully: ${fileName}, size: ${imageFile.size}, type: ${imageFile.type}`);
+        } catch (error) {
+          console.error('Error saving file:', error);
+          // Fallback to not setting an image if save fails
+          featured_image_url = null;
+        }
+      }
+      
+      // Get other form fields
+      data = {
+        title: formData.get('title') as string,
+        slug: formData.get('slug') as string,
+        description: formData.get('description') as string,
+        full_description: formData.get('full_description') as string || null,
+        category: formData.get('category') as string,
+        client: formData.get('client') as string || null,
+        location: formData.get('location') as string || null,
+        start_date: formData.get('start_date') as string || null,
+        end_date: formData.get('end_date') as string || null,
+        status: formData.get('status') as string,
+        is_featured: formData.get('is_featured') === 'true',
+        is_published: formData.get('is_published') === 'true',
+        // Use the uploaded image URL instead of the form field
+        featured_image: featured_image_url,
+      };
+    } else {
+      // Handle JSON request
+      data = await request.json();
+    }
 
+    const projectId = uuidv4();
     // Insert project
     await execute(
       `INSERT INTO projects (
@@ -57,8 +100,9 @@ export async function POST(request: Request) {
         client, location, start_date, end_date, status,
         featured_image, is_featured, is_published, created_by
       )
-      VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        projectId,
         data.title,
         data.slug,
         data.description,
@@ -72,9 +116,10 @@ export async function POST(request: Request) {
         data.featured_image,
         data.is_featured,
         data.is_published,
-        data.created_by
+        session.user.id
       ]
     );
+
 
     // Revalidate the projects page
     revalidatePath('/projects');

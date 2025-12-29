@@ -1,36 +1,41 @@
 export const runtime = 'nodejs' // ← ADD THIS LINE AT THE TOP
 
 import { NextResponse, type NextRequest } from "next/server"
-import jwt from "jsonwebtoken"
+import { verifySessionInMiddleware } from "@/lib/auth"
 
-const JWT_SECRET = '06cd73b65cc986d84756ba2a56c07eb1d7cc1b7a2fbd295478a60b6e8f3c9d8a'
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
   console.log("Middleware hit:", pathname)
   
-  const token = request.cookies.get("token")?.value
-  console.log("Token exists:", !!token)
+  const sessionToken = request.cookies.get("kms_session")?.value
+  console.log("Session token exists:", !!sessionToken)
   
-  if (!token && pathname !== "/admin/login") {
-    console.log("No token, redirecting to login")
+  if (!sessionToken && pathname !== "/admin/login") {
+    console.log("No session token, redirecting to login")
     return NextResponse.redirect(new URL("/admin/login", request.url))
   }
   
-  if (token) {
+  if (sessionToken) {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET)
-      console.log("Token valid:", decoded)
+      const session = await verifySessionInMiddleware(sessionToken)
+      console.log("Session valid:", session);
+      
+      if (!session) {
+        console.log("Session not valid, redirecting to login")
+        const res = NextResponse.redirect(new URL("/admin/login", request.url))
+        res.cookies.delete("kms_session")
+        return res
+      }
       
       if (pathname === "/admin/login") {
         console.log("Already logged in, redirecting to dashboard")
         return NextResponse.redirect(new URL("/admin", request.url))
       }
     } catch (error) {
-      console.log("Token invalid:", error)
+      console.log("Session invalid:", error)
       const res = NextResponse.redirect(new URL("/admin/login", request.url))
-      res.cookies.delete("token")
+      res.cookies.delete("kms_session")
       return res
     }
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { query, execute } from "@/lib/db"
+import { v4 as uuidv4 } from "uuid"
 
 interface Contact {
   id: string
@@ -28,10 +29,12 @@ export async function POST(request: Request) {
   try {
     const data = await request.json()
 
+    const contactId = uuidv4();
     await execute(
       `INSERT INTO contact_submissions (id, full_name, email, phone, company, subject, service_interest, message) 
-       VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        contactId,
         data.full_name,
         data.email,
         data.phone || null,

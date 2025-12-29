@@ -18,14 +18,14 @@ interface Project {
   title: string
   slug: string
   description: string
-  full_description: string
+  full_description: string | null
   category: string
-  client: string
-  location: string
-  start_date: string
-  end_date: string
+  client: string | null
+  location: string | null
+  start_date: string | null
+  end_date: string | null
   status: string
-  featured_image: string
+  featured_image: string | null
   is_featured: boolean
   is_published: boolean
 }
@@ -34,14 +34,14 @@ const defaultProject: Project = {
   title: "",
   slug: "",
   description: "",
-  full_description: "",
+  full_description: null,
   category: "construction",
-  client: "",
-  location: "",
-  start_date: "",
-  end_date: "",
+  client: null,
+  location: null,
+  start_date: null,
+  end_date: null,
   status: "ongoing",
-  featured_image: "",
+  featured_image: null,
   is_featured: false,
   is_published: false,
 }
@@ -50,6 +50,8 @@ export function ProjectForm({ project }: { project?: Project }) {
   const [formData, setFormData] = useState<Project>(project || defaultProject)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const router = useRouter()
 
   const isEditing = !!project?.id
@@ -78,12 +80,42 @@ export function ProjectForm({ project }: { project?: Project }) {
     try {
       const url = isEditing ? `/api/projects/${project.id}` : "/api/projects"
       const method = isEditing ? "PUT" : "POST"
+      
+      // Prepare form data - use FormData if there's an image file
+      let body: FormData | string;
+      let headers: Record<string, string>;
+      
+      if (imageFile) {
+        const formDataToSend = new FormData();
+        
+        // Add all form fields
+        Object.entries(formData).forEach(([key, value]) => {
+          // Only append featured_image if there's no uploaded file
+          if (key === 'featured_image' && imageFile) {
+            // Skip featured_image field if we have an uploaded file
+            return;
+          }
+          if (value !== null && value !== undefined) {
+            formDataToSend.append(key, value.toString());
+          }
+        });
+        
+        // Add the image file
+        formDataToSend.append('featured_image_file', imageFile);
+        
+        body = formDataToSend;
+        headers = {};
+      } else {
+        // If no image, use JSON
+        body = JSON.stringify(formData);
+        headers = { "Content-Type": "application/json" };
+      }
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: 'same-origin',
-        body: JSON.stringify(formData),
+        body,
       })
 
       if (!res.ok) {
@@ -168,8 +200,8 @@ export function ProjectForm({ project }: { project?: Project }) {
                 <Label htmlFor="full_description">Full Description</Label>
                 <Textarea
                   id="full_description"
-                  value={formData.full_description}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, full_description: e.target.value }))}
+                  value={formData.full_description || ""}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, full_description: e.target.value || null }))}
                   rows={6}
                 />
               </div>
@@ -186,16 +218,16 @@ export function ProjectForm({ project }: { project?: Project }) {
                   <Label htmlFor="client">Client</Label>
                   <Input
                     id="client"
-                    value={formData.client}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, client: e.target.value }))}
+                    value={formData.client || ""}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, client: e.target.value || null }))}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="location">Location</Label>
                   <Input
                     id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
+                    value={formData.location || ""}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value || null }))}
                   />
                 </div>
               </div>
@@ -206,8 +238,8 @@ export function ProjectForm({ project }: { project?: Project }) {
                   <Input
                     id="start_date"
                     type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, start_date: e.target.value }))}
+                    value={formData.start_date || ""}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, start_date: e.target.value || null }))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -215,8 +247,8 @@ export function ProjectForm({ project }: { project?: Project }) {
                   <Input
                     id="end_date"
                     type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, end_date: e.target.value }))}
+                    value={formData.end_date || ""}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, end_date: e.target.value || null }))}
                   />
                 </div>
               </div>
@@ -284,24 +316,81 @@ export function ProjectForm({ project }: { project?: Project }) {
               <CardTitle>Featured Image</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="featured_image">Image URL</Label>
-                <Input
-                  id="featured_image"
-                  type="url"
-                  placeholder="https://..."
-                  value={formData.featured_image}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, featured_image: e.target.value }))}
-                />
-                {formData.featured_image && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="block mb-2">Upload Image</Label>
+                  <div 
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors bg-muted/30"
+                    onClick={() => document.getElementById('imageFileInput')?.click()}
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-muted-foreground">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" x2="12" y1="3" y2="15" />
+                      </svg>
+                      <p className="text-sm text-muted-foreground">
+                        {imagePreview ? 'Click to change image' : 'Click to upload image'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG, GIF (Max 5MB)
+                      </p>
+                      {imagePreview && (
+                        <p className="text-xs text-muted-foreground mt-2 truncate max-w-full">
+                          {imageFile?.name}
+                        </p>
+                      )}
+                    </div>
+                    <input
+                      id="imageFileInput"
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Validate file size (max 5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            setError('File size exceeds 5MB limit');
+                            return;
+                          }
+                          
+                          setImageFile(file);
+                          
+                          // Create preview URL
+                          const previewUrl = URL.createObjectURL(file);
+                          setImagePreview(previewUrl);
+                          
+                          // Clear the URL field since we're using file upload
+                          setFormData((prev) => ({ ...prev, featured_image: null }));
+                        }
+                      }}
+                      aria-label="Upload featured image"
+                    />
+                  </div>
+                </div>
+                
+                {imagePreview && (
                   <div className="mt-2 aspect-video rounded-lg overflow-hidden bg-muted">
                     <img
-                      src={formData.featured_image || "/placeholder.svg"}
+                      src={imagePreview}
                       alt="Preview"
                       className="w-full h-full object-cover"
                     />
                   </div>
                 )}
+                
+                {!imagePreview && formData.featured_image && (
+                  <div className="mt-2 aspect-video rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={formData.featured_image}
+                      alt="Current featured image"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                
+
               </div>
             </CardContent>
           </Card>
@@ -310,3 +399,5 @@ export function ProjectForm({ project }: { project?: Project }) {
     </form>
   )
 }
+
+

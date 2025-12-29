@@ -14,20 +14,24 @@ interface JobPosting {
   experience_level: string
   salary_range: string
   description: string
-  requirements: string
-  responsibilities: string
+  requirements: string | null
+  responsibilities: string | null
+  benefits: string | null
+  application_deadline: string | null
   is_active: boolean
 }
 
 async function getJob(id: string) {
   const job = await queryOne<JobPosting>("SELECT * FROM job_postings WHERE id = ?", [id])
   if (job) {
-    // Parse JSON fields
+    // Parse JSON fields, handling null values
     return {
       ...job,
-      requirements: typeof job.requirements === "string" ? JSON.parse(job.requirements) : job.requirements || [],
+      requirements: job.requirements && typeof job.requirements === "string" ? JSON.parse(job.requirements) : job.requirements || [],
       responsibilities:
-        typeof job.responsibilities === "string" ? JSON.parse(job.responsibilities) : job.responsibilities || [],
+        job.responsibilities && typeof job.responsibilities === "string" ? JSON.parse(job.responsibilities) : job.responsibilities || [],
+      benefits:
+        job.benefits && typeof job.benefits === "string" ? JSON.parse(job.benefits) : job.benefits || [],
     }
   }
   return null

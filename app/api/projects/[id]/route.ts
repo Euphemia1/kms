@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { queryOne, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { writeFile } from "fs/promises"
+import { join } from "path"
 
 interface Project {
   id: string
@@ -44,7 +46,57 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params
-    const data = await request.json()
+    
+    let data;
+    let featured_image_url: string | null = null;
+    
+    // Check if request is multipart/form-data (file upload)
+    const contentType = request.headers.get('content-type');
+    if (contentType && contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      
+      // Process image file if present
+      const imageFile = formData.get('featured_image_file') as File | null;
+      if (imageFile) {
+        // Convert file to buffer
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        
+        const fileName = `${Date.now()}-${imageFile.name}`;
+        const filePath = join(process.cwd(), 'public', 'uploads', 'projects', fileName);
+        
+        try {
+          // Write file to public directory so it can be served
+          await writeFile(filePath, buffer);
+          featured_image_url = `/uploads/projects/${fileName}`;
+          console.log(`File saved successfully: ${fileName}, size: ${imageFile.size}, type: ${imageFile.type}`);
+        } catch (error) {
+          console.error('Error saving file:', error);
+          // Fallback to not setting an image if save fails
+          featured_image_url = null;
+        }
+      }
+      
+      // Get other form fields
+      data = {
+        title: formData.get('title') as string,
+        slug: formData.get('slug') as string,
+        description: formData.get('description') as string,
+        full_description: formData.get('full_description') as string || null,
+        category: formData.get('category') as string,
+        client: formData.get('client') as string || null,
+        location: formData.get('location') as string || null,
+        start_date: formData.get('start_date') as string || null,
+        end_date: formData.get('end_date') as string || null,
+        status: formData.get('status') as string,
+        is_featured: formData.get('is_featured') === 'true',
+        is_published: formData.get('is_published') === 'true',
+        // Use the uploaded image URL instead of the form field
+        featured_image: featured_image_url,
+      };
+    } else {
+      // Handle JSON request
+      data = await request.json();
+    }
 
     await execute(
       `UPDATE projects SET title = ?, slug = ?, description = ?, full_description = ?, category = ?, client = ?, location = ?, start_date = ?, end_date = ?, status = ?, featured_image = ?, is_featured = ?, is_published = ? WHERE id = ?`,
@@ -59,7 +111,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         data.start_date || null,
         data.end_date || null,
         data.status,
-        data.featured_image || null,
+        data.featured_image || null, // Use the processed image URL
         data.is_featured ? 1 : 0,
         data.is_published ? 1 : 0,
         id,
@@ -97,3 +149,4 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Failed to delete project" }, { status: 500 })
   }
 }
+

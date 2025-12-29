@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import { query } from "@/lib/db"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { FolderKanban, Newspaper, Briefcase, MessageSquare, Users, Clock } from "lucide-react"
+import { FolderKanban, Briefcase, MessageSquare, Users, Clock } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -11,9 +11,8 @@ interface CountResult {
 }
 
 async function getStats() {
-  const [projects, news, activeJobs, unreadMessages, pendingApplications] = await Promise.all([
+  const [projects, activeJobs, unreadMessages, pendingApplications] = await Promise.all([
     query<CountResult>("SELECT COUNT(*) as count FROM projects"),
-    query<CountResult>("SELECT COUNT(*) as count FROM news"),
     query<CountResult>("SELECT COUNT(*) as count FROM job_postings WHERE is_active = TRUE"),
     query<CountResult>("SELECT COUNT(*) as count FROM contact_submissions WHERE status = 'unread'"),
     query<CountResult>("SELECT COUNT(*) as count FROM job_applications WHERE status = 'pending'"),
@@ -21,7 +20,6 @@ async function getStats() {
 
   return {
     projects: projects[0]?.count || 0,
-    news: news[0]?.count || 0,
     activeJobs: activeJobs[0]?.count || 0,
     unreadMessages: unreadMessages[0]?.count || 0,
     pendingApplications: pendingApplications[0]?.count || 0,
@@ -67,14 +65,6 @@ export default async function AdminDashboard() {
       bg: "bg-blue-50",
     },
     {
-      title: "News Articles",
-      value: stats.news,
-      icon: Newspaper,
-      href: "/admin/news",
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-    },
-    {
       title: "Active Jobs",
       value: stats.activeJobs,
       icon: Briefcase,
@@ -110,9 +100,6 @@ export default async function AdminDashboard() {
         <div className="flex gap-3">
           <Button asChild>
             <Link href="/admin/projects/new">New Project</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/admin/news/new">New Article</Link>
           </Button>
         </div>
       </div>
@@ -232,21 +219,9 @@ export default async function AdminDashboard() {
               </Link>
             </Button>
             <Button variant="outline" className="h-auto py-4 flex-col gap-2 bg-transparent" asChild>
-              <Link href="/admin/news/new">
-                <Newspaper className="h-5 w-5" />
-                <span>Write News Article</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2 bg-transparent" asChild>
               <Link href="/admin/careers/new">
                 <Briefcase className="h-5 w-5" />
                 <span>Post Job Opening</span>
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2 bg-transparent" asChild>
-              <Link href="/admin/settings">
-                <MessageSquare className="h-5 w-5" />
-                <span>Site Settings</span>
               </Link>
             </Button>
           </div>

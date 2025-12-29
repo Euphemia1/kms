@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { query, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { v4 as uuidv4 } from "uuid"
 
 interface Service {
   id: string
@@ -34,12 +35,14 @@ export async function POST(request: Request) {
 
     const data = await request.json()
 
+    const serviceId = uuidv4();
     await execute(
       `INSERT INTO services (
         id, title, slug, short_description, full_description, icon, sort_order, is_active
       )
-      VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        serviceId,
         data.title,
         data.slug,
         data.short_description,

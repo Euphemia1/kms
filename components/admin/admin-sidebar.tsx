@@ -23,11 +23,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/projects", label: "Projects", icon: FolderKanban },
-  { href: "/admin/news", label: "News & Blog", icon: Newspaper },
   { href: "/admin/services", label: "Services", icon: Wrench },
   { href: "/admin/careers", label: "Careers", icon: Briefcase },
   { href: "/admin/applications", label: "Applications", icon: Users },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/add-admin", label: "Add Admin", icon: Users },
 ]
 

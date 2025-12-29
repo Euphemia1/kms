@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { query, execute } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 
 const MAX_ADMINS = 5;
 
 export async function POST(request: Request) {
   try {
+    // Check if user is authenticated and has super_admin role
+    const session = await getSession();
+    if (!session || session.user.role !== 'super_admin') {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { full_name, email, password } = await request.json();
 
     if (!full_name || !email || !password) {

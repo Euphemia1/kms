@@ -1,5 +1,6 @@
 "use client"
 
+
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -79,7 +80,7 @@ export default function AdminProfilePage() {
     setSaving(true)
 
     try {
-      const res = await fetch("/api/admin/profile", {
+      const res = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

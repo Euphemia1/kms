@@ -1,12 +1,12 @@
 
 export const dynamic = "force-dynamic";
-import { query } from "@/lib/db"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { ScrollAnimation } from "@/components/scroll-animation"
 import { Heart, Zap, Users, Briefcase } from "lucide-react"
 import { JobsList } from "@/components/jobs-list"
 import { ApplicationForm } from "@/components/application-form"
+import { unstable_cache } from 'next/cache'
 
 const benefits = [
   { icon: Heart, title: "Health Insurance", description: "Comprehensive medical coverage for you and your family" },
@@ -23,79 +23,47 @@ interface Job {
   location: string
   employment_type: string
   experience_level: string
+  salary_range: string
   description: string
-  requirements: string
-  responsibilities: string
+  requirements: string | string[] // Can be JSON string or parsed array
+  responsibilities: string | string[] // Can be JSON string or parsed array
+  benefits: string | string[] // Can be JSON string or parsed array
+  is_active: boolean
+  application_deadline: string | null
+  created_at: string
 }
 
 async function getJobs() {
-  // Mock data for jobs
-  const jobs: Job[] = [
-    {
-      id: "1",
-      title: "Senior Mining Engineer",
-      slug: "senior-mining-engineer",
-      department: "Engineering",
-      location: "Kolwezi, Lualaba Province",
-      employment_type: "Full-time",
-      experience_level: "Senior",
-      description: "We are seeking an experienced Senior Mining Engineer to lead our technical operations in mining projects.",
-      requirements: [
-        "Bachelor's degree in Mining Engineering",
-        "Minimum 5 years of experience in mining operations",
-        "Proven leadership skills"
-      ],
-      responsibilities: [
-        "Lead mining operations",
-        "Supervise junior engineers",
-        "Ensure safety compliance",
-        "Optimize extraction processes"
-      ]
-    },
-    {
-      id: "2",
-      title: "Logistics Coordinator",
-      slug: "logistics-coordinator",
-      department: "Operations",
-      location: "Lubumbashi, Haut-Katanga",
-      employment_type: "Full-time",
-      experience_level: "Mid-level",
-      description: "Responsible for coordinating logistics operations for our mining and construction projects.",
-      requirements: [
-        "Bachelor's degree in Logistics or related field",
-        "3+ years of logistics experience",
-        "Knowledge of DRC transportation regulations"
-      ],
-      responsibilities: [
-        "Manage transportation schedules",
-        "Coordinate with suppliers",
-        "Track shipments",
-        "Optimize delivery routes"
-      ]
-    },
-    {
-      id: "3",
-      title: "Construction Project Manager",
-      slug: "construction-project-manager",
-      department: "Construction",
-      location: "Kinshasa",
-      employment_type: "Full-time",
-      experience_level: "Senior",
-      description: "Lead large-scale construction projects from initiation to completion, ensuring quality and timeline adherence.",
-      requirements: [
-        "Degree in Civil Engineering or Construction Management",
-        "PMP certification preferred",
-        "7+ years of project management experience"
-      ],
-      responsibilities: [
-        "Plan and execute construction projects",
-        "Manage budgets and timelines",
-        "Coordinate with stakeholders",
-        "Ensure compliance with safety standards"
-      ]
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/jobs`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store', // Don't cache to ensure fresh data
+    });
+    
+    if (!res.ok) {
+      console.error('Failed to fetch jobs:', res.status, res.statusText);
+      // Return empty array instead of mock data
+      return [];
     }
-  ];
-  return jobs;
+    
+    let jobs = await res.json();
+    
+    // Parse JSON fields if they're stored as JSON strings
+    jobs = jobs.map((job: any) => ({
+      ...job,
+      requirements: typeof job.requirements === 'string' ? JSON.parse(job.requirements) : job.requirements,
+      responsibilities: typeof job.responsibilities === 'string' ? JSON.parse(job.responsibilities) : job.responsibilities,
+      benefits: typeof job.benefits === 'string' ? JSON.parse(job.benefits) : job.benefits,
+    }));
+    
+    return jobs;
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    return [];
+  }
 }
 
 export default async function CareersPage() {
