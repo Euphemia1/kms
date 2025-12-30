@@ -4,7 +4,6 @@ import { HeroSection } from "@/components/hero-section"
 import { AboutPreview } from "@/components/about-preview"
 import { ServicesGrid } from "@/components/services-grid"
 import { WhyChooseUs } from "@/components/why-choose-us"
-import { PartnersSection } from "@/components/partners-section"
 import { CTASection } from "@/components/cta-section"
 
 export default function HomePage() {
