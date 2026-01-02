@@ -3,9 +3,7 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server"
 import { queryOne } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
-
-const JWT_SECRET = '06cd73b65cc986d84756ba2a56c07eb1d7cc1b7a2fbd295478a60b6e8f3c9d8a';
+import { createSession, setSessionCookie } from "@/lib/auth"
 
 async function signIn(email: string, password: string) {
   console.log('=== SIGNIN FUNCTION STARTED ===');
@@ -41,15 +39,11 @@ async function signIn(email: string, password: string) {
       return { success: false, error: "Invalid email or password" }
     }
 
-    console.log('Generating JWT token...');
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: "24h" }
-    );
-    console.log('JWT token generated successfully');
+    console.log('Creating session...');
+    const sessionToken = await createSession(user.id);
+    console.log('Session created successfully');
 
-    return { success: true, token, user: { id: user.id, email: user.email, role: user.role } }
+    return { success: true, token: sessionToken, user: { id: user.id, email: user.email, role: user.role } }
   } catch (err: any) {
     console.error('=== SIGNIN ERROR ===');
     console.error('Error message:', err.message);
@@ -78,7 +72,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: 401 })
     }
 
-    console.log('Login successful, setting cookie...');
+    console.log('Login successful, setting session cookie...');
 
     const response = NextResponse.json({ 
       success: true, 
@@ -86,8 +80,8 @@ export async function POST(request: Request) {
       message: 'Login successful'
     });
 
-    // Set the JWT token as an httpOnly cookie
-    response.cookies.set('token', result.token || '', {
+    // Set the session token as an httpOnly cookie
+    response.cookies.set('kms_session', result.token || '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -96,7 +90,7 @@ export async function POST(request: Request) {
     });
 
     console.log('=== LOGIN COMPLETED SUCCESSFULLY ===');
-    console.log('Cookie set with JWT token');
+    console.log('Session cookie set');
     return response;
     
   } catch (error: any) {
