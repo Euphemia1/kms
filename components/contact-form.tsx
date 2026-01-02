@@ -76,15 +76,6 @@ export function ContactForm() {
   return (
     <ScrollAnimation>
       <div className="bg-card border border-border rounded-2xl p-8 lg:p-12">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">Send us a Message</h2>
-            <p className="text-muted-foreground text-sm">We'll respond within 24 hours</p>
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid sm:grid-cols-2 gap-6">

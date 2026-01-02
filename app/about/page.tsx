@@ -69,7 +69,7 @@ export default function AboutPage() {
               <div className="relative">
                 <img src="/about-hero.jpg" alt="KMS History" className="w-full rounded-2xl shadow-2xl" />
                 <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground p-6 rounded-2xl shadow-xl">
-                  <div className="text-4xl font-bold">2010</div>
+                  <div className="text-4xl font-bold">2021</div>
                   <div className="text-sm opacity-80">Year Founded</div>
                 </div>
               </div>
@@ -156,92 +156,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Leadership Team */}
-      <section className="py-20 bg-foreground text-background">
-        <div className="container mx-auto px-4">
-          <ScrollAnimation className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-primary font-semibold tracking-wide uppercase text-sm">Leadership</span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-4">Meet Our Team</h2>
-            <p className="text-background/70 mt-4">
-              Our experienced leadership team brings decades of combined expertise in mining, construction, and
-              industrial services.
-            </p>
-          </ScrollAnimation>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {leadership.map((person, index) => (
-              <ScrollAnimation key={person.name} delay={index * 100}>
-                <div className="text-center group">
-                  <div className="relative mb-6 overflow-hidden rounded-2xl">
-                    <img
-                      src={person.image || "/placeholder.svg"}
-                      alt={person.name}
-                      className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <h3 className="text-lg font-semibold">{person.name}</h3>
-                  <p className="text-primary text-sm mb-2">{person.role}</p>
-                  <p className="text-background/60 text-sm">{person.bio}</p>
-                </div>
-              </ScrollAnimation>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Certifications */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <ScrollAnimation direction="left">
-              <span className="text-primary font-semibold tracking-wide uppercase text-sm">
-                Compliance & Certifications
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold mt-4 mb-6">Certified Excellence</h2>
-              <p className="text-muted-foreground mb-8 leading-relaxed">
-                We maintain the highest standards of compliance and are certified by leading international and local
-                regulatory bodies to ensure quality and safety in all our operations.
-              </p>
-              <ul className="space-y-4">
-                {certifications.map((cert, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <FileCheck className="w-5 h-5 text-primary shrink-0" />
-                    <span>{cert}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button asChild className="mt-8 rounded-full" size="lg">
-                <Link href="/contact">
-                  Request Certification Details
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
-              </Button>
-            </ScrollAnimation>
-
-            <ScrollAnimation direction="right">
-              <div className="grid grid-cols-2 gap-4">
-                <img src="/iso-certification-badge-quality-management.jpg" alt="ISO Certification" className="rounded-xl shadow-lg" />
-                <img
-                  src="/placeholder.svg?height=250&width=250"
-                  alt="Safety Certification"
-                  className="rounded-xl shadow-lg mt-8"
-                />
-                <img
-                  src="/placeholder.svg?height=250&width=250"
-                  alt="Environmental Certification"
-                  className="rounded-xl shadow-lg"
-                />
-                <img
-                  src="/placeholder.svg?height=250&width=250"
-                  alt="Government Accreditation"
-                  className="rounded-xl shadow-lg mt-8"
-                />
-              </div>
-            </ScrollAnimation>
-          </div>
-        </div>
-      </section>
 
       <Footer />
     </main>
