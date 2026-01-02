@@ -28,6 +28,7 @@ interface JobPosting {
   benefits?: string[]
   application_deadline?: string | null
   is_active: boolean
+  featured_video?: string | null
 }
 
 const defaultJob: JobPosting = {
@@ -43,6 +44,7 @@ const defaultJob: JobPosting = {
   responsibilities: [""],
   benefits: [""],
   is_active: true,
+  featured_video: null,
 }
 
 export function JobForm({ job }: { job?: JobPosting }) {

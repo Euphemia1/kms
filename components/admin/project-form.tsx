@@ -26,6 +26,7 @@ interface Project {
   end_date: string | null
   status: string
   featured_image: string | null
+  featured_video: string | null
   is_featured: boolean
   is_published: boolean
 }
@@ -42,6 +43,7 @@ const defaultProject: Project = {
   end_date: null,
   status: "ongoing",
   featured_image: null,
+  featured_video: null,
   is_featured: false,
   is_published: false,
 }
@@ -390,7 +392,78 @@ export function ProjectForm({ project }: { project?: Project }) {
                   </div>
                 )}
                 
+              </div>
+            </CardContent>
+          </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle>Featured Video</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label className="block mb-2">Upload Video</Label>
+                  <div 
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors bg-muted/30"
+                    onClick={() => document.getElementById('videoFileInput')?.click()}
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-muted-foreground">
+                        <polygon points="23 7 16 12 23 17 23 7" />
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                      </svg>
+                      <p className="text-sm text-muted-foreground">
+                        Click to upload video
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        MP4, MOV, AVI (Max 50MB)
+                      </p>
+                    </div>
+                    <input
+                      id="videoFileInput"
+                      type="file"
+                      className="hidden"
+                      accept="video/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Validate file size (max 50MB)
+                          if (file.size > 50 * 1024 * 1024) {
+                            setError('Video file size exceeds 50MB limit');
+                            return;
+                          }
+                          
+                          // Set the video file
+                          setFormData((prev) => ({ ...prev, featured_video: URL.createObjectURL(file) }));
+                        }
+                      }}
+                      aria-label="Upload featured video"
+                    />
+                  </div>
+                </div>
+                
+                {formData.featured_video && (
+                  <div className="mt-2 aspect-video rounded-lg overflow-hidden bg-muted">
+                    <video
+                      src={formData.featured_video}
+                      controls
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                
+                {formData.featured_video && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => setFormData((prev) => ({ ...prev, featured_video: null }))}
+                  >
+                    Remove Video
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
