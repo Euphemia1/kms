@@ -23,6 +23,12 @@ interface NewsArticle {
 
 async function getNews() {
   try {
+    // Skip database query during build if we're in a static generation context
+    if (typeof window === 'undefined') {
+      // During build time, return empty array
+      return [];
+    }
+    
     const news = await query<NewsArticle>("SELECT * FROM news WHERE is_published = TRUE ORDER BY published_at DESC")
     return news
   } catch (error) {

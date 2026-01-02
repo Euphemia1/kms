@@ -31,6 +31,13 @@ interface SiteSetting {
 async function getProjects() {
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    
+    // Skip API call during build if we're in a static generation context
+    if (typeof window === 'undefined') {
+      // During build time, return empty array
+      return [];
+    }
+    
     const res = await fetch(`${siteUrl}/api/projects`, {
       method: 'GET',
       headers: {
