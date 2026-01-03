@@ -6,13 +6,43 @@ import { revalidatePath } from "next/cache"
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const job = await queryOne("SELECT * FROM job_postings WHERE id = ?", [id])
+    const job: any = await queryOne("SELECT id, title, slug, department, location, employment_type, experience_level, salary_range, description, requirements, responsibilities, benefits, is_active, featured_video, application_deadline, created_at, updated_at FROM job_postings WHERE id = ?", [id])
 
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 })
     }
-
-    return NextResponse.json(job)
+    
+    // Parse JSON fields and handle featured_video
+    const processedJob = {
+      ...job,
+      requirements: typeof job.requirements === 'string' ? (() => {
+        try {
+          return JSON.parse(job.requirements);
+        } catch (e) {
+          console.error('Error parsing requirements:', e);
+          return job.requirements;
+        }
+      })() : job.requirements,
+      responsibilities: typeof job.responsibilities === 'string' ? (() => {
+        try {
+          return JSON.parse(job.responsibilities);
+        } catch (e) {
+          console.error('Error parsing responsibilities:', e);
+          return job.responsibilities;
+        }
+      })() : job.responsibilities,
+      benefits: job.benefits && typeof job.benefits === 'string' ? (() => {
+        try {
+          return JSON.parse(job.benefits);
+        } catch (e) {
+          console.error('Error parsing benefits:', e);
+          return job.benefits;
+        }
+      })() : job.benefits,
+      featured_video: job.featured_video || null
+    };
+    
+    return NextResponse.json(processedJob)
   } catch (error) {
     console.error("Error fetching job:", error)
     return NextResponse.json({ error: "Failed to fetch job" }, { status: 500 })
@@ -35,7 +65,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const benefits = typeof data.benefits === 'object' && data.benefits !== null ? JSON.stringify(data.benefits) : data.benefits;
     
     await execute(
-      `UPDATE job_postings SET title = ?, slug = ?, department = ?, location = ?, employment_type = ?, experience_level = ?, salary_range = ?, description = ?, requirements = ?, responsibilities = ?, benefits = ?, application_deadline = ?, is_active = ? WHERE id = ?`,
+      `UPDATE job_postings SET title = ?, slug = ?, department = ?, location = ?, employment_type = ?, experience_level = ?, salary_range = ?, description = ?, requirements = ?, responsibilities = ?, benefits = ?, application_deadline = ?, is_active = ?, featured_video = ? WHERE id = ?`,
       [
         data.title,
         data.slug,
@@ -50,6 +80,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         benefits || null,
         data.application_deadline || null,
         data.is_active ? 1 : 0,
+        data.featured_video || null,
         id,
       ],
     )

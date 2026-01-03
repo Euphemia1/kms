@@ -38,7 +38,14 @@ async function getServices(): Promise<Service[]> {
     // Parse featured_images from JSON string if it exists
     services = services.map((service: any) => ({
       ...service,
-      featured_images: service.featured_images ? JSON.parse(service.featured_images) : []
+      featured_images: service.featured_images ? (() => {
+        try {
+          return JSON.parse(service.featured_images);
+        } catch (e) {
+          console.error('Error parsing featured_images:', e);
+          return [];
+        }
+      })() : []
     }));
     
     return services;

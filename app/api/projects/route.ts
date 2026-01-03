@@ -14,8 +14,16 @@ interface Project {
   title: string
   slug: string
   description: string
+  full_description: string | null
   category: string
+  client: string | null
+  location: string | null
+  start_date: string | null
+  end_date: string | null
   status: string
+  featured_image: string | null
+  featured_video: string | null
+  is_featured: boolean
   is_published: boolean
   created_at: string
 }
@@ -23,7 +31,7 @@ interface Project {
 
 export async function GET() {
   try {
-    const projects = await query<Project>("SELECT * FROM projects WHERE is_published = TRUE ORDER BY created_at DESC")
+    const projects = await query<Project>("SELECT id, title, slug, description, full_description, category, client, location, start_date, end_date, status, featured_image, featured_video, is_featured, is_published, created_at FROM projects WHERE is_published = TRUE ORDER BY created_at DESC")
     return NextResponse.json(projects)
   } catch (error) {
     console.error("Error fetching projects:", error)
@@ -43,6 +51,7 @@ export async function POST(request: Request) {
 
     let data;
     let featured_image_url: string | null = null;
+    let featured_video_url: string | null = null;
     
     // Check if request is multipart/form-data (file upload)
     const contentType = request.headers.get('content-type');
@@ -70,6 +79,27 @@ export async function POST(request: Request) {
         }
       }
       
+      // Process video file if present
+      const videoFile = formData.get('featured_video_file') as File | null;
+      if (videoFile) {
+        // Convert file to buffer
+        const buffer = Buffer.from(await videoFile.arrayBuffer());
+        
+        const fileName = `${Date.now()}-${videoFile.name}`;
+        const filePath = join(process.cwd(), 'public', 'uploads', 'projects', fileName);
+        
+        try {
+          // Write file to public directory so it can be served
+          await writeFile(filePath, buffer);
+          featured_video_url = `/uploads/projects/${fileName}`;
+          console.log(`Video file saved successfully: ${fileName}, size: ${videoFile.size}, type: ${videoFile.type}`);
+        } catch (error) {
+          console.error('Error saving video file:', error);
+          // Fallback to not setting a video if save fails
+          featured_video_url = null;
+        }
+      }
+      
       // Get other form fields
       data = {
         title: formData.get('title') as string,
@@ -84,8 +114,9 @@ export async function POST(request: Request) {
         status: formData.get('status') as string,
         is_featured: formData.get('is_featured') === 'true',
         is_published: formData.get('is_published') === 'true',
-        // Use the uploaded image URL instead of the form field
+        // Use the uploaded image and video URLs instead of the form fields
         featured_image: featured_image_url,
+        featured_video: featured_video_url,
       };
     } else {
       // Handle JSON request
@@ -98,9 +129,9 @@ export async function POST(request: Request) {
       `INSERT INTO projects (
         id, title, slug, description, full_description, category,
         client, location, start_date, end_date, status,
-        featured_image, is_featured, is_published, created_by
+        featured_image, featured_video, is_featured, is_published, created_by
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         projectId,
         data.title,
@@ -114,6 +145,7 @@ export async function POST(request: Request) {
         data.end_date,
         data.status,
         data.featured_image,
+        data.featured_video || null,
         data.is_featured,
         data.is_published,
         session.user.id

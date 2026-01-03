@@ -6,8 +6,20 @@ import { v4 as uuidv4 } from "uuid"
 
 export async function GET() {
   try {
-    const jobs = await query("SELECT * FROM job_postings ORDER BY created_at DESC")
-    return NextResponse.json(jobs)
+    const jobs = await query("SELECT id, title, slug, department, location, employment_type, experience_level, salary_range, description, requirements, responsibilities, benefits, is_active, featured_video, application_deadline, created_at FROM job_postings ORDER BY created_at DESC")
+    
+    // Parse JSON fields and handle featured_video
+    const processedJobs = jobs.map((job: any) => {
+      return {
+        ...job,
+        requirements: typeof job.requirements === 'string' ? JSON.parse(job.requirements) : job.requirements,
+        responsibilities: typeof job.responsibilities === 'string' ? JSON.parse(job.responsibilities) : job.responsibilities,
+        benefits: job.benefits && typeof job.benefits === 'string' ? JSON.parse(job.benefits) : job.benefits,
+        featured_video: job.featured_video || null
+      };
+    });
+    
+    return NextResponse.json(processedJobs)
   } catch (error) {
     console.error("Error fetching jobs:", error)
     return NextResponse.json({ error: "Failed to fetch jobs" }, { status: 500 })

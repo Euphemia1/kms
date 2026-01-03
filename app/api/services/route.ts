@@ -26,7 +26,14 @@ export async function GET() {
     // Parse featured_images from JSON string if it exists
     const processedServices = services.map(service => ({
       ...service,
-      featured_images: service.featured_images ? JSON.parse(service.featured_images) : []
+      featured_images: service.featured_images ? (() => {
+        try {
+          return JSON.parse(service.featured_images);
+        } catch (e) {
+          console.error('Error parsing featured_images:', e);
+          return [];
+        }
+      })() : []
     }));
     
     return NextResponse.json(processedServices)

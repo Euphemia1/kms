@@ -22,13 +22,26 @@ interface Service {
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const service = await queryOne<Service>("SELECT * FROM services WHERE id = ?", [id])
+    const service = await queryOne<any>("SELECT * FROM services WHERE id = ?", [id])
 
     if (!service) {
       return NextResponse.json({ error: "Service not found" }, { status: 404 })
     }
-
-    return NextResponse.json(service)
+    
+    // Parse featured_images from JSON string if it exists
+    const processedService = {
+      ...service,
+      featured_images: service.featured_images ? (() => {
+        try {
+          return JSON.parse(service.featured_images);
+        } catch (e) {
+          console.error('Error parsing featured_images:', e);
+          return [];
+        }
+      })() : []
+    };
+    
+    return NextResponse.json(processedService)
   } catch (error) {
     console.error("Error fetching service:", error)
     return NextResponse.json({ error: "Failed to fetch service" }, { status: 500 })

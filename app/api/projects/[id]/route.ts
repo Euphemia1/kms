@@ -18,6 +18,7 @@ interface Project {
   end_date: string
   status: string
   featured_image: string
+  featured_video: string
   is_featured: boolean
   is_published: boolean
 }
@@ -25,7 +26,7 @@ interface Project {
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const project = await queryOne<Project>("SELECT * FROM projects WHERE id = ?", [id])
+    const project = await queryOne<Project>("SELECT id, title, slug, description, full_description, category, client, location, start_date, end_date, status, featured_image, featured_video, is_featured, is_published FROM projects WHERE id = ?", [id])
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 })
@@ -49,6 +50,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     
     let data;
     let featured_image_url: string | null = null;
+    let featured_video_url: string | null = null;
     
     // Check if request is multipart/form-data (file upload)
     const contentType = request.headers.get('content-type');
@@ -76,6 +78,27 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         }
       }
       
+      // Process video file if present
+      const videoFile = formData.get('featured_video_file') as File | null;
+      if (videoFile) {
+        // Convert file to buffer
+        const buffer = Buffer.from(await videoFile.arrayBuffer());
+        
+        const fileName = `${Date.now()}-${videoFile.name}`;
+        const filePath = join(process.cwd(), 'public', 'uploads', 'projects', fileName);
+        
+        try {
+          // Write file to public directory so it can be served
+          await writeFile(filePath, buffer);
+          featured_video_url = `/uploads/projects/${fileName}`;
+          console.log(`Video file saved successfully: ${fileName}, size: ${videoFile.size}, type: ${videoFile.type}`);
+        } catch (error) {
+          console.error('Error saving video file:', error);
+          // Fallback to not setting a video if save fails
+          featured_video_url = null;
+        }
+      }
+      
       // Get other form fields
       data = {
         title: formData.get('title') as string,
@@ -90,8 +113,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         status: formData.get('status') as string,
         is_featured: formData.get('is_featured') === 'true',
         is_published: formData.get('is_published') === 'true',
-        // Use the uploaded image URL instead of the form field
+        // Use the uploaded image and video URLs instead of the form fields
         featured_image: featured_image_url,
+        featured_video: featured_video_url,
       };
     } else {
       // Handle JSON request
@@ -99,7 +123,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     await execute(
-      `UPDATE projects SET title = ?, slug = ?, description = ?, full_description = ?, category = ?, client = ?, location = ?, start_date = ?, end_date = ?, status = ?, featured_image = ?, is_featured = ?, is_published = ? WHERE id = ?`,
+      `UPDATE projects SET title = ?, slug = ?, description = ?, full_description = ?, category = ?, client = ?, location = ?, start_date = ?, end_date = ?, status = ?, featured_image = ?, featured_video = ?, is_featured = ?, is_published = ? WHERE id = ?`,
       [
         data.title,
         data.slug,
@@ -112,6 +136,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         data.end_date || null,
         data.status,
         data.featured_image || null, // Use the processed image URL
+        data.featured_video || null, // Use the processed video URL
         data.is_featured ? 1 : 0,
         data.is_published ? 1 : 0,
         id,
