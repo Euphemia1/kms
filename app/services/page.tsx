@@ -3,60 +3,64 @@ import { Footer } from "@/components/footer"
 import { ScrollAnimation } from "@/components/scroll-animation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { HardHat, Truck, Mountain, Package, FileText, Wrench, ArrowRight, CheckCircle2 } from "lucide-react"
+import { HardHat, Package, Wrench, ArrowRight, CheckCircle2 } from "lucide-react"
+import { query } from "@/lib/db"
+import { ServiceGallery } from "@/components/service-gallery"
 
-const services = [
-  {
-    id: "maintenance",
-    icon: Wrench,
-    title: "Mechanical Maintenance & Services",
-    description:
-      "We specialize in maintaining industrial equipment and infrastructure to ensure optimal performance and longevity. Our mechanical maintenance services cover all types of industrial machinery and equipment.",
-    features: [
-      "Preventive maintenance",
-      "Equipment repairs",
-      "Mechanical system overhauls",
-      "Predictive maintenance",
-      "Equipment installation",
-      "Performance optimization",
-    ],
-    image: "/services/maintenance.jpg",
-  },
-  {
-    id: "construction",
-    icon: HardHat,
-    title: "Civil & Structure Works",
-    description:
-      "We provide top-notch civil engineering services and structural constructions, from infrastructure development to industrial facilities and building construction.",
-    features: [
-      "Civil infrastructure development",
-      "Building construction",
-      "Structural engineering services",
-      "Project management",
-      "Site preparation and earthworks",
-      "Quality assurance and control",
-    ],
-    image: "/services/construction.jpg",
-  },
-  {
-    id: "procurement",
-    icon: Package,
-    title: "Industrial Supply & Procurement",
-    description:
-      "Efficient procurement and supply chain management for all your industrial needs, ensuring timely delivery and quality products for mining and industrial operations.",
-    features: [
-      "Strategic sourcing",
-      "Vendor management",
-      "Inventory optimization",
-      "Supply chain solutions",
-      "Quality inspections",
-      "Cost reduction strategies",
-    ],
-    image: "/services/procurement.jpg",
-  },
-]
+interface Service {
+  id: string
+  title: string
+  slug: string
+  short_description: string
+  full_description: string
+  icon: string
+  sort_order: number
+  is_active: boolean
+  featured_images?: string[]
+  created_at: string
+  updated_at: string
+}
 
-export default function ServicesPage() {
+// Fetch services from the API
+async function getServices(): Promise<Service[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/services`, {
+      cache: 'no-store' // Don't cache during build
+    });
+    
+    if (!res.ok) {
+      console.error('Failed to fetch services:', res.status, res.statusText);
+      return [];
+    }
+    
+    let services = await res.json();
+    
+    // Parse featured_images from JSON string if it exists
+    services = services.map((service: any) => ({
+      ...service,
+      featured_images: service.featured_images ? JSON.parse(service.featured_images) : []
+    }));
+    
+    return services;
+  } catch (error) {
+    console.error("Error fetching services:", error);
+    return [];
+  }
+}
+
+export default async function ServicesPage() {
+  const services = await getServices();
+  
+  // Get the appropriate icon component based on the icon name string
+  const getIconComponent = (iconName: string) => {
+    switch(iconName) {
+      case "HardHat": return HardHat;
+      case "Package": return Package;
+      case "Wrench": return Wrench;
+      default: return Wrench;
+    }
+  };
+  
   return (
     <main className="min-h-screen">
       <Navigation />
@@ -81,49 +85,62 @@ export default function ServicesPage() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="space-y-32">
-            {services.map((service, index) => (
-              <div key={service.id} id={service.id} className="scroll-mt-24">
-                <div
-                  className={`grid lg:grid-cols-2 gap-16 items-center ${index % 2 === 1 ? "lg:flex-row-reverse" : ""}`}
-                >
-                  <ScrollAnimation direction={index % 2 === 0 ? "left" : "right"}>
-                    <div className={`relative ${index % 2 === 1 ? "lg:order-2" : ""}`}>
-                      <img
-                        src={service.image || "/placeholder.svg"}
-                        alt={service.title}
-                        className="w-full rounded-2xl shadow-2xl"
-                      />
-                      <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-primary/10 rounded-2xl -z-10" />
-                      <div className="absolute -top-6 -left-6 w-16 h-16 bg-accent/20 rounded-2xl -z-10" />
-                    </div>
-                  </ScrollAnimation>
-
-                  <ScrollAnimation direction={index % 2 === 0 ? "right" : "left"}>
-                    <div className={`space-y-6 ${index % 2 === 1 ? "lg:order-1" : ""}`}>
-                      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-                        <service.icon className="w-8 h-8 text-primary" />
+            {services.map((service, index) => {
+              const IconComponent = getIconComponent(service.icon);
+              
+              // Extract features from the description for now (in a real app, this would come from the API)
+              const features = [
+                "Professional service delivery",
+                "Quality assurance",
+                "Timely completion",
+                "Expert consultation",
+                "Project management",
+                "Technical support",
+              ];
+              
+              return (
+                <div key={service.id} id={service.id} className="scroll-mt-24">
+                  <div
+                    className={`grid lg:grid-cols-2 gap-16 items-center ${index % 2 === 1 ? "lg:flex-row-reverse" : ""}`}
+                  >
+                    <ScrollAnimation direction={index % 2 === 0 ? "left" : "right"}>
+                      <div className={`relative ${index % 2 === 1 ? "lg:order-2" : ""}`}>
+                        <ServiceGallery 
+                          images={service.featured_images || []} 
+                          title={service.title} 
+                        />
+                        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-primary/10 rounded-2xl -z-10" />
+                        <div className="absolute -top-6 -left-6 w-16 h-16 bg-accent/20 rounded-2xl -z-10" />
                       </div>
-                      <h2 className="text-3xl md:text-4xl font-bold">{service.title}</h2>
-                      <p className="text-muted-foreground text-lg leading-relaxed">{service.description}</p>
-                      <ul className="grid sm:grid-cols-2 gap-3">
-                        {service.features.map((feature, i) => (
-                          <li key={i} className="flex items-center gap-2">
-                            <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                            <span className="text-sm">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <Button asChild className="rounded-full" size="lg">
-                        <Link href="/contact">
-                          Get a Quote
-                          <ArrowRight className="ml-2 w-4 h-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </ScrollAnimation>
+                    </ScrollAnimation>
+
+                    <ScrollAnimation direction={index % 2 === 0 ? "right" : "left"}>
+                      <div className={`space-y-6 ${index % 2 === 1 ? "lg:order-1" : ""}`}>
+                        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                          <IconComponent className="w-8 h-8 text-primary" />
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-bold">{service.title}</h2>
+                        <p className="text-muted-foreground text-lg leading-relaxed">{service.short_description}</p>
+                        <ul className="grid sm:grid-cols-2 gap-3">
+                          {features.map((feature, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
+                              <span className="text-sm">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <Button asChild className="rounded-full" size="lg">
+                          <Link href="/contact">
+                            Get a Quote
+                            <ArrowRight className="ml-2 w-4 h-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </ScrollAnimation>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
