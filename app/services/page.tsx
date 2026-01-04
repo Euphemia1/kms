@@ -14,9 +14,11 @@ interface Service {
   short_description: string
   full_description: string
   icon: string
+  featured_image?: string | null
+  gallery_images?: string[] | null
+  features?: string[] | null
   sort_order: number
   is_active: boolean
-  featured_images?: string[]
   created_at: string
   updated_at: string
 }
@@ -35,17 +37,11 @@ async function getServices(): Promise<Service[]> {
     
     let services = await res.json();
     
-    // Parse featured_images from JSON string if it exists
+    // Parse gallery_images from JSON string if it exists
     services = services.map((service: any) => ({
       ...service,
-      featured_images: service.featured_images ? (() => {
-        try {
-          return JSON.parse(service.featured_images);
-        } catch (e) {
-          console.error('Error parsing featured_images:', e);
-          return [];
-        }
-      })() : []
+      gallery_images: service.gallery_images && service.gallery_images !== 'null' ? JSON.parse(service.gallery_images) || [] : [],
+      features: service.features ? JSON.parse(service.features) : [],
     }));
     
     return services;
@@ -95,8 +91,7 @@ export default async function ServicesPage() {
             {services.map((service, index) => {
               const IconComponent = getIconComponent(service.icon);
               
-              // Extract features from the description for now (in a real app, this would come from the API)
-              const features = [
+              const features = service.features || [
                 "Professional service delivery",
                 "Quality assurance",
                 "Timely completion",
@@ -113,7 +108,7 @@ export default async function ServicesPage() {
                     <ScrollAnimation direction={index % 2 === 0 ? "left" : "right"}>
                       <div className={`relative ${index % 2 === 1 ? "lg:order-2" : ""}`}>
                         <ServiceGallery 
-                          images={service.featured_images || []} 
+                          images={service.gallery_images && service.gallery_images.length > 0 ? service.gallery_images : (service.featured_image ? [service.featured_image] : [])} 
                           title={service.title} 
                         />
                         <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-primary/10 rounded-2xl -z-10" />
@@ -129,7 +124,7 @@ export default async function ServicesPage() {
                         <h2 className="text-3xl md:text-4xl font-bold">{service.title}</h2>
                         <p className="text-muted-foreground text-lg leading-relaxed">{service.short_description}</p>
                         <ul className="grid sm:grid-cols-2 gap-3">
-                          {features.map((feature, i) => (
+                          {features.map((feature: string, i: number) => (
                             <li key={i} className="flex items-center gap-2">
                               <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
                               <span className="text-sm">{feature}</span>

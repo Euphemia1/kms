@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS services (
   full_description TEXT,
   icon VARCHAR(100),
   featured_image TEXT,
+  gallery_images JSON,
   features JSON,
   sort_order INT DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
