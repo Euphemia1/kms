@@ -51,7 +51,7 @@ export default function AboutPage() {
           <ScrollAnimation className="max-w-3xl">
             <span className="text-primary font-semibold tracking-wide uppercase text-sm">About Us</span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mt-4 mb-6">
-              Building the Future of <span className="text-primary">DRC Industries</span>
+              building the future of <span className="text-primary">DRC civil engineering and mechanical engineering services</span>
             </h1>
             <p className="text-muted-foreground text-lg leading-relaxed">
               Since our establishment, KMS SARL has been at the forefront of civil engineering, construction, and
