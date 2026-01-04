@@ -7,10 +7,8 @@ import {
   Building2,
   LayoutDashboard,
   FolderKanban,
-  Newspaper,
   Briefcase,
   Users,
-  Settings,
   LogOut,
   Wrench,
   ChevronLeft,
@@ -24,12 +22,8 @@ const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/projects", label: "Projects", icon: FolderKanban },
   { href: "/admin/services", label: "Services", icon: Wrench },
-  { href: "/admin/news", label: "News", icon: Newspaper },
-  { href: "/admin/team", label: "Team", icon: Users },
   { href: "/admin/careers", label: "Careers", icon: Briefcase },
   { href: "/admin/applications", label: "Applications", icon: Users },
-  { href: "/admin/contacts", label: "Contacts", icon: Users },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/add-admin", label: "Add Admin", icon: Users },
 ]
 

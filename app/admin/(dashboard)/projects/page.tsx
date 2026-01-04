@@ -19,11 +19,15 @@ interface Project {
   is_featured: boolean
   is_published: boolean
   created_at: string
+  gallery_images: string[] | null
 }
 
 async function getProjects() {
-  const projects = await query<Project>(`SELECT id, title, description, category, client, location, status, is_featured, is_published, created_at FROM projects ORDER BY created_at DESC`)
-  return projects
+  const projects = await query<any>(`SELECT id, title, description, category, client, location, status, gallery_images, is_featured, is_published, created_at FROM projects ORDER BY created_at DESC`)
+  return projects.map(project => ({
+    ...project,
+    gallery_images: project.gallery_images && project.gallery_images !== 'null' ? JSON.parse(project.gallery_images) || [] : [],
+  }))
 }
 
 export default async function ProjectsPage() {

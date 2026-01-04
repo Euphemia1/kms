@@ -6,7 +6,6 @@ import { ProjectsPageClient } from "@/components/projects-page-client"
 export const dynamic = 'force-dynamic'; // Enable dynamic rendering for real-time updates
 
 interface Project {
-
   id: string
   title: string
   slug: string
@@ -50,6 +49,7 @@ async function getProjects() {
     return projects.map((project: any) => ({
       ...project,
       featured_image: project.featured_image || "/placeholder.svg", // Provide a default image if none exists
+      gallery_images: project.gallery_images && project.gallery_images !== 'null' ? JSON.parse(project.gallery_images) || [] : [], // Parse gallery images from JSON string
     }));
     
   } catch (error) {

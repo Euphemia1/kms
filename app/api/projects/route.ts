@@ -23,6 +23,7 @@ interface Project {
   status: string
   featured_image: string | null
   featured_video: string | null
+  gallery_images: string[] | null
   is_featured: boolean
   is_published: boolean
   created_at: string
@@ -31,7 +32,7 @@ interface Project {
 
 export async function GET() {
   try {
-    const projects = await query<Project>("SELECT id, title, slug, description, full_description, category, client, location, start_date, end_date, status, featured_image, featured_video, is_featured, is_published, created_at FROM projects WHERE is_published = TRUE ORDER BY created_at DESC")
+    const projects = await query<Project>("SELECT id, title, slug, description, full_description, category, client, location, start_date, end_date, status, featured_image, featured_video, gallery_images, is_featured, is_published, created_at FROM projects WHERE is_published = TRUE ORDER BY created_at DESC")
     return NextResponse.json(projects)
   } catch (error) {
     console.error("Error fetching projects:", error)
@@ -52,30 +53,54 @@ export async function POST(request: Request) {
     let data;
     let featured_image_url: string | null = null;
     let featured_video_url: string | null = null;
+    let gallery_images_urls: string[] = [];
     
     // Check if request is multipart/form-data (file upload)
     const contentType = request.headers.get('content-type');
     if (contentType && contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
       
-      // Process image file if present
-      const imageFile = formData.get('featured_image_file') as File | null;
-      if (imageFile) {
+      // Process featured image file if present
+      const featuredImageFile = formData.get('featured_image_file') as File | null;
+      if (featuredImageFile) {
         // Convert file to buffer
-        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        const buffer = Buffer.from(await featuredImageFile.arrayBuffer());
         
-        const fileName = `${Date.now()}-${imageFile.name}`;
+        const fileName = `${Date.now()}-${featuredImageFile.name}`;
         const filePath = join(process.cwd(), 'public', 'uploads', 'projects', fileName);
         
         try {
           // Write file to public directory so it can be served
           await writeFile(filePath, buffer);
           featured_image_url = `/uploads/projects/${fileName}`;
-          console.log(`File saved successfully: ${fileName}, size: ${imageFile.size}, type: ${imageFile.type}`);
+          console.log(`Featured image saved successfully: ${fileName}, size: ${featuredImageFile.size}, type: ${featuredImageFile.type}`);
         } catch (error) {
-          console.error('Error saving file:', error);
+          console.error('Error saving featured image:', error);
           // Fallback to not setting an image if save fails
           featured_image_url = null;
+        }
+      }
+      
+      // Process gallery images if present
+      const galleryImageFiles = formData.getAll('gallery_images') as File[];
+      for (const galleryImageFile of galleryImageFiles) {
+        if (galleryImageFile && galleryImageFile.name) {
+          // Convert file to buffer
+          const buffer = Buffer.from(await galleryImageFile.arrayBuffer());
+          
+          const fileName = `${Date.now()}-${galleryImageFile.name}`;
+          const filePath = join(process.cwd(), 'public', 'uploads', 'projects', fileName);
+          
+          try {
+            // Write file to public directory so it can be served
+            await writeFile(filePath, buffer);
+            const imageUrl = `/uploads/projects/${fileName}`;
+            gallery_images_urls.push(imageUrl);
+            console.log(`Gallery image saved successfully: ${fileName}, size: ${galleryImageFile.size}, type: ${galleryImageFile.type}`);
+          } catch (error) {
+            console.error('Error saving gallery image:', error);
+            // Skip this image if save fails
+          }
         }
       }
       
@@ -114,7 +139,7 @@ export async function POST(request: Request) {
         status: formData.get('status') as string,
         is_featured: formData.get('is_featured') === 'true',
         is_published: formData.get('is_published') === 'true',
-        // Use the uploaded image and video URLs instead of the form fields
+        // Use the uploaded images and video URLs instead of the form fields
         featured_image: featured_image_url,
         featured_video: featured_video_url,
       };
@@ -146,7 +171,7 @@ export async function POST(request: Request) {
         data.status,
         data.featured_image,
         data.featured_video || null,
-        null, // gallery_images - not implemented in form yet
+        JSON.stringify(gallery_images_urls), // Store gallery images as JSON string
         data.is_featured,
         data.is_published,
         session.user.id

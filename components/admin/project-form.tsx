@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,6 +28,7 @@ interface Project {
   featured_video: string | null
   is_featured: boolean
   is_published: boolean
+  gallery_images: string[] | null
 }
 
 const defaultProject: Project = {
@@ -46,6 +46,7 @@ const defaultProject: Project = {
   featured_video: null,
   is_featured: false,
   is_published: false,
+  gallery_images: null,
 }
 
 export function ProjectForm({ project }: { project?: Project }) {
@@ -54,9 +55,18 @@ export function ProjectForm({ project }: { project?: Project }) {
   const [error, setError] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [galleryImages, setGalleryImages] = useState<File[]>([])
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
   const router = useRouter()
 
   const isEditing = !!project?.id
+  
+  // Initialize gallery previews when editing a project
+  React.useEffect(() => {
+    if (isEditing && project?.gallery_images && project.gallery_images.length > 0) {
+      setGalleryPreviews(project.gallery_images);
+    }
+  }, [isEditing, project]);
 
   const generateSlug = (title: string) => {
     return title
@@ -87,7 +97,7 @@ export function ProjectForm({ project }: { project?: Project }) {
       let body: FormData | string;
       let headers: Record<string, string>;
       
-      if (imageFile) {
+      if (imageFile || galleryImages.length > 0) {
         const formDataToSend = new FormData();
         
         // Add all form fields
@@ -102,8 +112,15 @@ export function ProjectForm({ project }: { project?: Project }) {
           }
         });
         
-        // Add the image file
-        formDataToSend.append('featured_image_file', imageFile);
+        // Add the featured image file if present
+        if (imageFile) {
+          formDataToSend.append('featured_image_file', imageFile);
+        }
+        
+        // Add gallery images if present
+        galleryImages.forEach((file) => {
+          formDataToSend.append('gallery_images', file);
+        });
         
         body = formDataToSend;
         headers = {};
@@ -392,6 +409,118 @@ export function ProjectForm({ project }: { project?: Project }) {
                   </div>
                 )}
                 
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Gallery Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label className="block mb-2">Upload Gallery Images</Label>
+                  <div 
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors bg-muted/30"
+                    onClick={() => document.getElementById('galleryFileInput')?.click()}
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-muted-foreground">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" x2="12" y1="3" y2="15" />
+                      </svg>
+                      <p className="text-sm text-muted-foreground">
+                        Click to upload multiple images
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG, GIF (Max 5MB each)
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {galleryImages.length > 0 ? `${galleryImages.length} image(s) selected` : 'No images selected'}
+                      </p>
+                    </div>
+                    <input
+                      id="galleryFileInput"
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = e.target.files;
+                        if (files) {
+                          const newFiles = Array.from(files).filter(file => {
+                            // Validate file size (max 5MB)
+                            if (file.size > 5 * 1024 * 1024) {
+                              setError('One or more files exceed 5MB limit');
+                              return false;
+                            }
+                            return true;
+                          });
+                          
+                          setGalleryImages(prev => [...prev, ...newFiles]);
+                          
+                          // Create preview URLs for new files
+                          newFiles.forEach(file => {
+                            const previewUrl = URL.createObjectURL(file);
+                            setGalleryPreviews(prev => [...prev, previewUrl]);
+                          });
+                        }
+                      }}
+                      aria-label="Upload gallery images"
+                    />
+                  </div>
+                </div>
+                
+                {galleryPreviews.length > 0 && (
+                  <div className="mt-4">
+                    <div className="text-sm font-medium mb-2">Preview Gallery Images:</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {galleryPreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Gallery preview ${index}`}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              // Remove the preview and file
+                              setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
+                              setGalleryImages(prev => prev.filter((_, i) => i !== index));
+                              
+                              // Revoke the object URL to free memory
+                              URL.revokeObjectURL(preview);
+                            }}
+                            aria-label="Remove image"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {galleryImages.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => {
+                      // Clear all gallery images
+                      galleryPreviews.forEach(preview => URL.revokeObjectURL(preview));
+                      setGalleryPreviews([]);
+                      setGalleryImages([]);
+                    }}
+                  >
+                    Remove All Gallery Images
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

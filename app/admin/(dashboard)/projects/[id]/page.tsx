@@ -16,6 +16,7 @@ interface Project {
   status: string
   featured_image: string | null
   featured_video: string | null
+  gallery_images: string[] | null
   is_featured: boolean
   is_published: boolean
   created_by: string | null
@@ -24,8 +25,14 @@ interface Project {
 }
 
 async function getProject(id: string) {
-  const project = await queryOne<Project>(`SELECT id, title, slug, description, full_description, category, client, location, start_date, end_date, status, featured_image, featured_video, is_featured, is_published, created_by, created_at, updated_at FROM projects WHERE id = ?`, [id])
-  return project
+  const project = await queryOne<any>(`SELECT id, title, slug, description, full_description, category, client, location, start_date, end_date, status, featured_image, featured_video, gallery_images, is_featured, is_published, created_by, created_at, updated_at FROM projects WHERE id = ?`, [id])
+  
+  if (!project) return null;
+  
+  return {
+    ...project,
+    gallery_images: project.gallery_images && project.gallery_images !== 'null' ? JSON.parse(project.gallery_images) || [] : [],
+  };
 }
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {

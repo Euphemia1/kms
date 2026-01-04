@@ -11,7 +11,7 @@ interface Project {
   title: string
   slug: string
   description: string
-  full_description: string
+  full_description: string | null
   category: string
   client: string
   location: string
@@ -19,7 +19,9 @@ interface Project {
   end_date: string
   status: string
   featured_image: string
+  gallery_images: string[] | null
   is_featured: boolean
+  created_at: string
 }
 
 interface ProjectsPageClientProps {
@@ -31,9 +33,40 @@ export function ProjectsPageClient({ projects, stats }: ProjectsPageClientProps)
   const categories = ["All", "construction", "mining", "logistics", "consulting", "procurement"]
   const [activeCategory, setActiveCategory] = useState("All")
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   const filteredProjects =
     activeCategory === "All" ? projects : projects.filter((p) => p.category === activeCategory.toLowerCase())
+    
+  const getCurrentImage = () => {
+    if (!selectedProject) return null;
+    const allImages = [selectedProject.featured_image, ...(selectedProject.gallery_images || [])].filter(img => img && img !== null && img !== undefined && img !== '');
+    return allImages[currentImageIndex] || selectedProject.featured_image;
+  };
+
+  const goToNextImage = () => {
+    if (!selectedProject) return;
+    const allImages = [selectedProject.featured_image, ...(selectedProject.gallery_images || [])].filter(img => img && img !== null && img !== undefined && img !== '');
+    if (allImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }
+  };
+
+  const goToPrevImage = () => {
+    if (!selectedProject) return;
+    const allImages = [selectedProject.featured_image, ...(selectedProject.gallery_images || [])].filter(img => img && img !== null && img !== undefined && img !== '');
+    if (allImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    }
+  };
+
+  const goToImage = (index: number) => {
+    if (!selectedProject) return;
+    const allImages = [selectedProject.featured_image, ...(selectedProject.gallery_images || [])].filter(img => img && img !== null && img !== undefined && img !== '');
+    if (index >= 0 && index < allImages.length) {
+      setCurrentImageIndex(index);
+    }
+  };
 
   return (
     <>
@@ -107,24 +140,95 @@ export function ProjectsPageClient({ projects, stats }: ProjectsPageClientProps)
       {selectedProject && (
         <div
           className="fixed inset-0 bg-foreground/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedProject(null)}
-          onKeyDown={(e) => e.key === "Escape" && setSelectedProject(null)}
+          onClick={() => {
+            setSelectedProject(null);
+            setCurrentImageIndex(0);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setSelectedProject(null);
+              setCurrentImageIndex(0);
+            } else if (e.key === "ArrowRight") {
+              goToNextImage();
+            } else if (e.key === "ArrowLeft") {
+              goToPrevImage();
+            }
+          }}
           role="dialog"
           aria-modal="true"
         >
           <div
-            className="bg-card max-w-3xl w-full rounded-2xl overflow-hidden shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto"
+            className="bg-card max-w-4xl w-full max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl animate-scale-in flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={
-                selectedProject.featured_image ||
-                `/placeholder.svg?height=400&width=800&query=${selectedProject.category || "/placeholder.svg"} project`
-              }
-              alt={selectedProject.title}
-              className="w-full aspect-video object-cover"
-            />
-            <div className="p-8">
+            {/* Gallery Images Section */}
+            <div className="relative aspect-video bg-muted">
+              {/* Main Image */}
+              <img
+                src={
+                  getCurrentImage() ||
+                  `/placeholder.svg?height=400&width=800&query=${selectedProject.category || "/placeholder.svg"} project`
+                }
+                alt={`${selectedProject.title} - Image ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Gallery Images if available */}
+              {(() => {
+                const allImages = [selectedProject.featured_image, ...(selectedProject.gallery_images || [])].filter(img => img && img !== null && img !== undefined && img !== '');
+                return allImages.length > 1; // Only show gallery controls if there's more than one image
+              })() && (
+                <>
+                  {/* Left Navigation Arrow */}
+                  <button
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full z-10 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToPrevImage();
+                    }}
+                    aria-label="Previous image"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                  </button>
+                  
+                  {/* Right Navigation Arrow */}
+                  <button
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full z-10 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToNextImage();
+                    }}
+                    aria-label="Next image"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </button>
+                  
+                  {/* Gallery Thumbnails */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/50 p-2 rounded-lg">
+                    {([selectedProject.featured_image, ...(selectedProject.gallery_images || [])].filter(img => img && img !== null && img !== undefined && img !== '') as string[]).map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img}
+                        alt={`Gallery thumbnail ${idx + 1}`}
+                        className={`w-12 h-8 object-cover rounded border cursor-pointer ${
+                          currentImageIndex === idx ? 'border-2 border-primary' : 'border border-muted'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToImage(idx);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            
+            <div className="p-8 flex-1 overflow-y-auto max-h-[calc(90vh-400px)]">
               <div className="flex flex-wrap gap-4 mb-4 text-sm">
                 <span className="px-3 py-1 bg-primary/10 text-primary rounded-full capitalize">
                   {selectedProject.category}
@@ -153,7 +257,10 @@ export function ProjectsPageClient({ projects, stats }: ProjectsPageClientProps)
                 <Button
                   variant="outline"
                   className="rounded-full bg-transparent"
-                  onClick={() => setSelectedProject(null)}
+                  onClick={() => {
+                    setSelectedProject(null);
+                    setCurrentImageIndex(0);
+                  }}
                 >
                   Close
                 </Button>
