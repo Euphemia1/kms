@@ -2,8 +2,9 @@ import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { ScrollAnimation } from "@/components/scroll-animation"
 import { ProjectsPageClient } from "@/components/projects-page-client"
+import { query } from '@/lib/db'
 
-export const dynamic = 'force-dynamic'; // Enable dynamic rendering for real-time updates
+export const dynamic = 'force-dynamic';
 
 interface Project {
   id: string
@@ -30,36 +31,31 @@ interface SiteSetting {
 
 async function getProjects() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/projects`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store', // Disable caching for real-time updates
-    });
+    console.log('🔍 Querying database directly...');
     
-    if (!res.ok) {
-      console.error('Failed to fetch projects:', res.status, res.statusText);
-      return [];
-    }
+    const projects = await query(`
+      SELECT * FROM projects 
+      WHERE is_published = 1 
+      ORDER BY created_at DESC
+    `);
     
-    const projects = await res.json();
+    console.log('✅ Projects from DB:', projects.length);
+    console.log('📦 Raw projects data:', JSON.stringify(projects, null, 2));
     
-    // Ensure projects are properly formatted
     return projects.map((project: any) => ({
       ...project,
-      featured_image: project.featured_image || "/placeholder.svg", // Provide a default image if none exists
-      gallery_images: project.gallery_images && project.gallery_images !== 'null' ? JSON.parse(project.gallery_images) || [] : [], // Parse gallery images from JSON string
+      featured_image: project.featured_image || "/placeholder.svg",
+      gallery_images: project.gallery_images && project.gallery_images !== 'null' 
+        ? JSON.parse(project.gallery_images) 
+        : [],
     }));
-    
   } catch (error) {
-    console.error('Error fetching projects:', error);
+    console.error('💥 Database query error:', error);
     return [];
   }
 }
 
 async function getStats() {
-  // Mock data for stats
   const settingsMap: Record<string, string> = {
     "projects_completed": "200",
     "years_experience": "15",
@@ -73,13 +69,15 @@ export default async function ProjectsPage() {
   let projects = []
   let stats = {}
   
-  // Only fetch data if we're not in a static generation context
   try {
     projects = await getProjects()
     stats = await getStats()
+    
+    console.log('🎯 Total projects fetched:', projects.length);
+    console.log('📊 Projects being passed to client:', projects);
+    
   } catch (error) {
-    console.warn('Failed to fetch projects:', error)
-    // Use fallback values
+    console.error('❌ Failed to fetch projects:', error)
     projects = []
     stats = {
       "projects_completed": "200",

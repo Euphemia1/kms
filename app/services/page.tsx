@@ -6,6 +6,7 @@ import Link from "next/link"
 import { HardHat, Package, Wrench, ArrowRight, CheckCircle2 } from "lucide-react"
 import { query } from "@/lib/db"
 import { ServiceGallery } from "@/components/service-gallery"
+import ServicesGrid from "@/components/services-grid"
 
 interface Service {
   id: string
@@ -38,11 +39,79 @@ async function getServices(): Promise<Service[]> {
     let services = await res.json();
     
     // Parse gallery_images from JSON string if it exists
-    services = services.map((service: any) => ({
-      ...service,
-      gallery_images: service.gallery_images && service.gallery_images !== 'null' ? JSON.parse(service.gallery_images) || [] : [],
-      features: service.features ? JSON.parse(service.features) : [],
-    }));
+    services = services.map((service: any) => {
+      let parsedGalleryImages = [];
+      let parsedFeatures = [];
+      
+      try {
+        // Check if gallery_images is a string (raw from DB) or already parsed (from API)
+        if (service.gallery_images) {
+          if (typeof service.gallery_images === 'string') {
+            // If it's a string, it might be a JSON string or 'null'/'[]'
+            if (service.gallery_images !== 'null' && service.gallery_images !== '[]' && service.gallery_images.trim() !== '') {
+              // Check if it's a valid JSON string
+              const trimmedValue = service.gallery_images.trim();
+              if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
+                parsedGalleryImages = JSON.parse(service.gallery_images) || [];
+              } else {
+                // If it's not a valid JSON array, try to parse it as a stringified array
+                parsedGalleryImages = [service.gallery_images];
+              }
+            }
+          } else if (Array.isArray(service.gallery_images)) {
+            // If it's already an array (from API), use it directly
+            parsedGalleryImages = service.gallery_images;
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing gallery_images:', e, 'Value:', service.gallery_images);
+        // If parsing fails, try to handle it as a single image URL or empty array
+        if (service.gallery_images && typeof service.gallery_images === 'string' && service.gallery_images.startsWith('http')) {
+          parsedGalleryImages = [service.gallery_images];
+        } else {
+          parsedGalleryImages = [];
+        }
+      }
+      
+      try {
+        // Check if features is a string (raw from DB) or already parsed (from API)
+        if (service.features) {
+          if (typeof service.features === 'string') {
+            if (service.features !== 'null' && service.features !== '[]' && service.features.trim() !== '') {
+              // Check if it's a valid JSON string
+              const trimmedValue = service.features.trim();
+              if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
+                parsedFeatures = JSON.parse(service.features) || [];
+              } else {
+                // If it's not a valid JSON array, try to parse it as a stringified array or split by commas/lines
+                try {
+                  parsedFeatures = JSON.parse(`[${service.features.split(/[,\n]/).map((f: string) => JSON.stringify(f.trim())).join(',')}]`);
+                } catch {
+                  parsedFeatures = [service.features];
+                }
+              }
+            }
+          } else if (Array.isArray(service.features)) {
+            // If it's already an array (from API), use it directly
+            parsedFeatures = service.features;
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing features:', e, 'Value:', service.features);
+        // If parsing fails, try to handle it as a comma-separated string
+        if (service.features && typeof service.features === 'string') {
+          parsedFeatures = service.features.split(/[,\n]/).map((f: string) => f.trim()).filter((f: string) => f.length > 0);
+        } else {
+          parsedFeatures = [];
+        }
+      }
+      
+      return {
+        ...service,
+        gallery_images: parsedGalleryImages,
+        features: parsedFeatures,
+      };
+    });
     
     return services;
   } catch (error) {
@@ -84,66 +153,17 @@ export default async function ServicesPage() {
         </div>
       </section>
 
-      {/* Services List */}
+      {/* Services Grid */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="space-y-32">
-            {services.map((service, index) => {
-              const IconComponent = getIconComponent(service.icon);
-              
-              const features = service.features || [
-                "Professional service delivery",
-                "Quality assurance",
-                "Timely completion",
-                "Expert consultation",
-                "Project management",
-                "Technical support",
-              ];
-              
-              return (
-                <div key={service.id} id={service.id} className="scroll-mt-24">
-                  <div
-                    className={`grid lg:grid-cols-2 gap-16 items-center ${index % 2 === 1 ? "lg:flex-row-reverse" : ""}`}
-                  >
-                    <ScrollAnimation direction={index % 2 === 0 ? "left" : "right"}>
-                      <div className={`relative ${index % 2 === 1 ? "lg:order-2" : ""}`}>
-                        <ServiceGallery 
-                          images={service.gallery_images && service.gallery_images.length > 0 ? service.gallery_images : (service.featured_image ? [service.featured_image] : [])} 
-                          title={service.title} 
-                        />
-                        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-primary/10 rounded-2xl -z-10" />
-                        <div className="absolute -top-6 -left-6 w-16 h-16 bg-accent/20 rounded-2xl -z-10" />
-                      </div>
-                    </ScrollAnimation>
-
-                    <ScrollAnimation direction={index % 2 === 0 ? "right" : "left"}>
-                      <div className={`space-y-6 ${index % 2 === 1 ? "lg:order-1" : ""}`}>
-                        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-                          <IconComponent className="w-8 h-8 text-primary" />
-                        </div>
-                        <h2 className="text-3xl md:text-4xl font-bold">{service.title}</h2>
-                        <p className="text-muted-foreground text-lg leading-relaxed">{service.short_description}</p>
-                        <ul className="grid sm:grid-cols-2 gap-3">
-                          {features.map((feature: string, i: number) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                              <span className="text-sm">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        <Button asChild className="rounded-full" size="lg">
-                          <Link href="/contact">
-                            Get a Quote
-                            <ArrowRight className="ml-2 w-4 h-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </ScrollAnimation>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {!services || services.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg mb-2">No services available yet.</p>
+              <p className="text-sm text-muted-foreground">Check back soon or contact us for more information.</p>
+            </div>
+          ) : (
+            <ServicesGrid services={services} />
+          )}
         </div>
       </section>
 

@@ -134,7 +134,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         data.icon,
         data.featured_image || null,
         data.gallery_images && data.gallery_images.length > 0 ? JSON.stringify(data.gallery_images) : null,
-        data.features && data.features.length > 0 ? data.features : null,
+        data.features && data.features.length > 0 ? JSON.stringify(data.features) : null,
         data.sort_order || 0,
         data.is_active !== undefined ? data.is_active : true,
         id,

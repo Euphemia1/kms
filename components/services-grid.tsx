@@ -1,81 +1,191 @@
-import { ScrollAnimation } from "./scroll-animation"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { HardHat, Truck, Mountain, Package, FileText, ArrowRight, Wrench } from "lucide-react"
+"use client";
 
-const services = [
-  {
-    icon: Wrench,
-    title: "Mechanical Maintenance & Services",
-    description:
-      "We specialize in maintaining industrial equipment and infrastructure to ensure optimal performance and longevity. Our mechanical maintenance services cover all types of industrial machinery and equipment.",
-    href: "/services#maintenance",
-    color: "bg-cyan-500/10 text-cyan-600",
-  },
-  {
-    icon: HardHat,
-    title: "Civil & Structure Works",
-    description: "We provide top-notch civil engineering services and structural constructions, from infrastructure development to industrial facilities and building construction.",
-    href: "/services#construction",
-    color: "bg-blue-500/10 text-blue-600",
-  },
-  {
-    icon: Package,
-    title: "Industrial Supply & Procurement",
-    description: "Efficient procurement and supply chain management for all your industrial needs, ensuring timely delivery and quality products for mining and industrial operations.",
-    href: "/services#procurement",
-    color: "bg-purple-500/10 text-purple-600",
-  },
-]
+import { useState } from "react";
+import { ScrollAnimation } from "@/components/scroll-animation";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { HardHat, Package, Wrench, ArrowRight, CheckCircle2, X } from "lucide-react";
 
-export function ServicesGrid() {
+interface Service {
+  id: string;
+  title: string;
+  slug: string;
+  short_description: string;
+  full_description: string;
+  icon: string;
+  featured_image?: string | null;
+  gallery_images?: string[] | null;
+  features?: string[] | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ServicesGridProps {
+  services: Service[];
+}
+
+export default function ServicesGrid({ services }: ServicesGridProps) {
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const getIconComponent = (iconName: string) => {
+    switch(iconName) {
+      case "HardHat": return HardHat;
+      case "Package": return Package;
+      case "Wrench": return Wrench;
+      default: return Wrench;
+    }
+  };
+
+  const features = selectedService?.features || [
+    "Professional service delivery",
+    "Quality assurance",
+    "Timely completion",
+    "Expert consultation",
+    "Project management",
+    "Technical support",
+  ];
+
   return (
-    <section className="py-24 bg-muted/50">
-      <div className="container mx-auto px-4">
-        <ScrollAnimation className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-primary font-semibold tracking-wide uppercase text-sm">Our Services</span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mt-4 mb-6">
-            Comprehensive Solutions for <span className="text-primary">Your Success</span>
-          </h2>
-          <p className="text-muted-foreground text-lg">
-            We offer a wide range of professional services designed to support your operations and drive growth in the
-            mining and industrial sectors.
-          </p>
-        </ScrollAnimation>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, index) => (
-            <ScrollAnimation key={service.title} delay={index * 100}>
-              <Link href={service.href} className="group block h-full">
-                <div className="bg-card h-full p-8 rounded-2xl border border-border hover:border-primary/50 hover:shadow-xl transition-all duration-300 group-hover:-translate-y-2">
-                  <div
-                    className={`w-14 h-14 rounded-xl ${service.color} flex items-center justify-center mb-6 transition-transform group-hover:scale-110`}
-                  >
-                    <service.icon className="w-7 h-7" />
+    <>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {services.map((service: Service, index: number) => {
+          const IconComponent = getIconComponent(service.icon);
+          const serviceFeatures = service.features || [
+            "Professional service delivery",
+            "Quality assurance",
+            "Timely completion",
+            "Expert consultation",
+            "Project management",
+            "Technical support",
+          ];
+          
+          return (
+            <ScrollAnimation key={service.id} delay={index * 100}>
+              <div 
+                className="group cursor-pointer border rounded-2xl p-6 hover:shadow-lg transition-shadow"
+                onClick={() => {
+                  setSelectedService(service);
+                  setIsModalOpen(true);
+                }}
+              >
+                {/* Display featured image if available */}
+                {service.featured_image && (
+                  <div className="mb-4">
+                    <img 
+                      src={service.featured_image} 
+                      alt={service.title}
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
-                    {service.title}
-                  </h3>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">{service.description}</p>
-                  <div className="flex items-center text-primary font-medium">
-                    Learn More
-                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform" />
-                  </div>
+                )}
+                                
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                  <IconComponent className="w-6 h-6 text-primary" />
                 </div>
-              </Link>
+                <h2 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
+                  {service.title}
+                </h2>
+                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                  {service.short_description}
+                </p>
+                                
+                <ul className="space-y-2 mb-6">
+                  {serviceFeatures.slice(0, 3).map((feature: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-xs">
+                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild className="rounded-full" size="sm">
+                  <Link href="/contact">
+                    Get a Quote
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
             </ScrollAnimation>
-          ))}
-        </div>
-
-        <ScrollAnimation className="text-center mt-12">
-          <Button asChild size="lg" variant="outline" className="rounded-full bg-transparent">
-            <Link href="/services">
-              View All Services
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
-          </Button>
-        </ScrollAnimation>
+          );
+        })}
       </div>
-    </section>
-  )
+
+      {/* Modal for full description */}
+      {isModalOpen && selectedService && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-2xl font-bold">{selectedService.title}</h3>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted"
+                  aria-label="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Display featured image in modal */}
+              {selectedService.featured_image && (
+                <div className="mb-6">
+                  <img 
+                    src={selectedService.featured_image} 
+                    alt={selectedService.title}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Description</h4>
+                  <p className="text-muted-foreground whitespace-pre-line">{selectedService.full_description}</p>
+                </div>
+
+                {selectedService.gallery_images && selectedService.gallery_images.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Gallery</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {selectedService.gallery_images.map((image, index) => (
+                        <img 
+                          key={index}
+                          src={image} 
+                          alt={`${selectedService.title} - Gallery ${index + 1}`}
+                          className="w-full h-24 object-cover rounded"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <h4 className="font-semibold mb-2">Features</h4>
+                  <ul className="space-y-2">
+                    {features.map((feature: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                        <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <Button asChild>
+                  <Link href="/contact">
+                    Contact Us
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ScrollAnimation } from "@/components/scroll-animation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -30,6 +30,13 @@ interface ProjectsPageClientProps {
 }
 
 export function ProjectsPageClient({ projects, stats }: ProjectsPageClientProps) {
+  // ADD LOGGING
+  useEffect(() => {
+    console.log('🎨 ProjectsPageClient mounted');
+    console.log('📦 Received projects count:', projects?.length || 0);
+    console.log('📊 Projects data:', projects);
+  }, [projects]);
+
   const categories = ["All", "construction", "mining", "logistics", "consulting", "procurement"]
   const [activeCategory, setActiveCategory] = useState("All")
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
@@ -37,6 +44,9 @@ export function ProjectsPageClient({ projects, stats }: ProjectsPageClientProps)
 
   const filteredProjects =
     activeCategory === "All" ? projects : projects.filter((p) => p.category === activeCategory.toLowerCase())
+  
+  console.log('🔍 Filtered projects count:', filteredProjects?.length || 0);
+  console.log('🏷️ Active category:', activeCategory);
     
   const getCurrentImage = () => {
     if (!selectedProject) return null;
@@ -91,7 +101,12 @@ export function ProjectsPageClient({ projects, stats }: ProjectsPageClientProps)
       {/* Projects Grid */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          {filteredProjects.length === 0 ? (
+          {!projects || projects.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg mb-2">No projects available yet.</p>
+              <p className="text-sm text-muted-foreground">Check back soon or contact us for more information.</p>
+            </div>
+          ) : filteredProjects.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">No projects found in this category.</p>
             </div>
@@ -176,7 +191,7 @@ export function ProjectsPageClient({ projects, stats }: ProjectsPageClientProps)
               {/* Gallery Images if available */}
               {(() => {
                 const allImages = [selectedProject.featured_image, ...(selectedProject.gallery_images || [])].filter(img => img && img !== null && img !== undefined && img !== '');
-                return allImages.length > 1; // Only show gallery controls if there's more than one image
+                return allImages.length > 1;
               })() && (
                 <>
                   {/* Left Navigation Arrow */}

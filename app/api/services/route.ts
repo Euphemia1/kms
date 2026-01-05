@@ -3,7 +3,7 @@ import { query, execute } from "@/lib/db"
 import { getSession } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { v4 as uuidv4 } from "uuid"
-import { writeFile } from "fs/promises"
+import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 
 interface Service {
@@ -14,8 +14,8 @@ interface Service {
   full_description: string
   icon: string
   featured_image?: string | null
-  gallery_images?: string[] | null
-  features?: string | null
+  gallery_images?: string[] | string | null
+  features?: string[] | string | null
   sort_order: number
   is_active: boolean
   created_at: string
@@ -66,6 +66,10 @@ export async function POST(request: Request) {
         const filePath = join(process.cwd(), 'public', 'uploads', 'services', fileName);
         
         try {
+          // Ensure directory exists
+          const dirPath = join(process.cwd(), 'public', 'uploads', 'services');
+          await mkdir(dirPath, { recursive: true });
+          
           // Write file to public directory so it can be served
           await writeFile(filePath, buffer);
           featured_image_url = `/uploads/services/${fileName}`;
@@ -86,6 +90,10 @@ export async function POST(request: Request) {
           const filePath = join(process.cwd(), 'public', 'uploads', 'services', fileName);
           
           try {
+            // Ensure directory exists
+            const dirPath = join(process.cwd(), 'public', 'uploads', 'services');
+            await mkdir(dirPath, { recursive: true });
+            
             // Write file to public directory so it can be served
             await writeFile(filePath, buffer);
             gallery_images_urls.push(`/uploads/services/${fileName}`);
@@ -128,8 +136,8 @@ export async function POST(request: Request) {
         data.full_description,
         data.icon,
         data.featured_image || null,
-        data.gallery_images && data.gallery_images.length > 0 ? JSON.stringify(data.gallery_images) : null,
-        data.features && data.features.length > 0 ? data.features : null,
+        data.gallery_images ? (Array.isArray(data.gallery_images) ? JSON.stringify(data.gallery_images) : (typeof data.gallery_images === 'string' ? data.gallery_images : null)) : null,
+        data.features ? (Array.isArray(data.features) ? JSON.stringify(data.features) : (typeof data.features === 'string' ? data.features : null)) : null,
         data.sort_order || 0,
         data.is_active !== undefined ? data.is_active : true
       ]
@@ -158,6 +166,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     const { id } = params;
+    
+    // Fetch existing service data to preserve values not in the update
+    const existingService = await query<{gallery_images: string | null, features: string | null}>(`SELECT gallery_images, features FROM services WHERE id = ?`, [id]);
+    if (!existingService || existingService.length === 0) {
+      return NextResponse.json({ error: "Service not found" }, { status: 404 });
+    }
+    
+    const existingData = existingService[0];
     let data;
     let featured_image_url: string | null = null;
     let gallery_images_urls: string[] = [];
@@ -177,6 +193,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         const filePath = join(process.cwd(), 'public', 'uploads', 'services', fileName);
         
         try {
+          // Ensure directory exists
+          const dirPath = join(process.cwd(), 'public', 'uploads', 'services');
+          await mkdir(dirPath, { recursive: true });
+          
           // Write file to public directory so it can be served
           await writeFile(filePath, buffer);
           featured_image_url = `/uploads/services/${fileName}`;
@@ -197,6 +217,10 @@ export async function PUT(request: Request, { params }: { params: { id: string }
           const filePath = join(process.cwd(), 'public', 'uploads', 'services', fileName);
           
           try {
+            // Ensure directory exists
+            const dirPath = join(process.cwd(), 'public', 'uploads', 'services');
+            await mkdir(dirPath, { recursive: true });
+            
             // Write file to public directory so it can be served
             await writeFile(filePath, buffer);
             gallery_images_urls.push(`/uploads/services/${fileName}`);
@@ -224,6 +248,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       // Handle JSON request
       data = await request.json();
     }
+    
+    // Preserve existing values if not provided in the update
+    if (data.gallery_images === undefined || data.gallery_images === null) {
+      data.gallery_images = existingData.gallery_images;
+    }
+    if (data.features === undefined || data.features === null) {
+      data.features = existingData.features;
+    }
 
     await execute(
       `UPDATE services 
@@ -246,8 +278,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         data.full_description,
         data.icon,
         data.featured_image || null,
-        data.gallery_images && data.gallery_images.length > 0 ? JSON.stringify(data.gallery_images) : null,
-        data.features && data.features.length > 0 ? data.features : null,
+        data.gallery_images ? (Array.isArray(data.gallery_images) ? JSON.stringify(data.gallery_images) : (typeof data.gallery_images === 'string' ? data.gallery_images : null)) : null,
+        data.features ? (Array.isArray(data.features) ? JSON.stringify(data.features) : (typeof data.features === 'string' ? data.features : null)) : null,
         data.sort_order || 0,
         data.is_active !== undefined ? data.is_active : true,
         id
