@@ -8,6 +8,9 @@ import { query } from "@/lib/db"
 import { ServiceGallery } from "@/components/service-gallery"
 import ServicesGrid from "@/components/services-grid"
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
+
 interface Service {
   id: string
   title: string
