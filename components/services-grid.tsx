@@ -166,9 +166,9 @@ export default function ServicesGrid({ services }: ServicesGridProps) {
                   <ul className="space-y-2">
                     {features.map((feature: string, i: number) => (
                       <li key={i} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
+                      <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <span className="text-muted-foreground">{feature}</span>
+                    </li>
                     ))}
                   </ul>
                 </div>
@@ -188,4 +188,115 @@ export default function ServicesGrid({ services }: ServicesGridProps) {
       )}
     </>
   );
+}
+
+// Server component to fetch and render services
+async function fetchServices() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/services`, {
+      cache: 'force-cache',
+      next: { revalidate: 3600 } // Revalidate every hour
+    });
+    
+    if (!res.ok) {
+      console.error('Failed to fetch services:', res.status, res.statusText);
+      return [];
+    }
+    
+    let services = await res.json();
+    
+    // Parse gallery_images and features from JSON string if it exists
+    services = services.map((service: any) => {
+      let parsedGalleryImages = [];
+      let parsedFeatures = [];
+      
+      try {
+        // Check if gallery_images is a string (raw from DB) or already parsed (from API)
+        if (service.gallery_images) {
+          if (typeof service.gallery_images === 'string') {
+            // If it's a string, it might be a JSON string or 'null'/'[]'
+            if (service.gallery_images !== 'null' && service.gallery_images !== '[]' && service.gallery_images.trim() !== '') {
+              // Check if it's a valid JSON string
+              const trimmedValue = service.gallery_images.trim();
+              if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
+                parsedGalleryImages = JSON.parse(service.gallery_images) || [];
+              } else {
+                // If it's not a valid JSON array, try to parse it as a stringified array
+                parsedGalleryImages = [service.gallery_images];
+              }
+            }
+          } else if (Array.isArray(service.gallery_images)) {
+            // If it's already an array (from API), use it directly
+            parsedGalleryImages = service.gallery_images;
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing gallery_images:', e, 'Value:', service.gallery_images);
+        // If parsing fails, try to handle it as a single image URL or empty array
+        if (service.gallery_images && typeof service.gallery_images === 'string' && service.gallery_images.startsWith('http')) {
+          parsedGalleryImages = [service.gallery_images];
+        } else {
+          parsedGalleryImages = [];
+        }
+      }
+      
+      try {
+        // Check if features is a string (raw from DB) or already parsed (from API)
+        if (service.features) {
+          if (typeof service.features === 'string') {
+            if (service.features !== 'null' && service.features !== '[]' && service.features.trim() !== '') {
+              // Check if it's a valid JSON string
+              const trimmedValue = service.features.trim();
+              if (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) {
+                parsedFeatures = JSON.parse(service.features) || [];
+              } else {
+                // If it's not a valid JSON array, try to parse it as a stringified array or split by commas/lines
+                try {
+                  parsedFeatures = JSON.parse(`[${service.features.split(/[,\\n]/).map((f: string) => JSON.stringify(f.trim())).join(',')}]`);
+                } catch {
+                  parsedFeatures = [service.features];
+                }
+              }
+            }
+          } else if (Array.isArray(service.features)) {
+            // If it's already an array (from API), use it directly
+            parsedFeatures = service.features;
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing features:', e, 'Value:', service.features);
+        // If parsing fails, try to handle it as a comma-separated string
+        if (service.features && typeof service.features === 'string') {
+          parsedFeatures = service.features.split(/[,\\n]/).map((f: string) => f.trim()).filter((f: string) => f.length > 0);
+        } else {
+          parsedFeatures = [];
+        }
+      }
+      
+      return {
+        ...service,
+        gallery_images: parsedGalleryImages,
+        features: parsedFeatures,
+      };
+    });
+    
+    return services;
+  } catch (error) {
+    console.error("Error fetching services:", error);
+    return [];
+  }
+}
+
+// Server component for homepage
+export async function ServicesGridHomepage() {
+  const services = await fetchServices();
+  
+  // Only show first 3 services on homepage
+  const limitedServices = services.slice(0, 3);
+  
+  if (!limitedServices || limitedServices.length === 0) {
+    return null; // Don't render anything if no services
+  }
+  
+  return <ServicesGrid services={limitedServices} />;
 }
