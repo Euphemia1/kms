@@ -1,14 +1,15 @@
 import mysql from "mysql2/promise";
 
+// Database configuration with specific production settings for shared hosting
 const dbConfig = {
-  host: process.env.DB_HOST || process.env.RDS_HOSTNAME || '127.0.0.1', // Use 127.0.0.1 instead of localhost for some hosting providers
+  host: process.env.DB_HOST || process.env.RDS_HOSTNAME || 'localhost',
   port: parseInt(process.env.DB_PORT || process.env.RDS_PORT || '3306'),
   user: process.env.DB_USER || process.env.RDS_USERNAME || 'u754414236_kms',
   password: process.env.DB_PASSWORD || process.env.RDS_PASSWORD || 'Kmssarl@2025',
   database: process.env.DB_NAME || process.env.RDS_DB_NAME || 'u754414236_kms'
 };
 
-// Create a connection pool with production-ready settings
+// Create a connection pool with settings optimized for shared hosting
 const pool = mysql.createPool({
   host: dbConfig.host,
   port: dbConfig.port,
@@ -16,12 +17,21 @@ const pool = mysql.createPool({
   password: dbConfig.password,
   database: dbConfig.database,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 5, // Reduced connection limit for shared hosting
   queueLimit: 0,
-  // Production settings
+  // Shared hosting settings
   connectTimeout: 60000,
   // SSL configuration for production
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  // Additional settings for shared hosting
+  insecureAuth: true, // Required for some shared hosting providers
+  multipleStatements: true,
+  // Use legacy auth for older MySQL versions
+  authPlugins: {
+    mysql_clear_password: () => (pluginData: Buffer) => {
+      return Buffer.from(dbConfig.password + '\0', 'utf8');
+    }
+  }
 });
 
 export async function query<T>(sql: string, params?: unknown[]): Promise<T[]> {
