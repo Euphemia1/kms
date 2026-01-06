@@ -78,10 +78,13 @@ export default function ContactPage() {
                 </ScrollAnimation>
               ))}
 
-              {/* Map */}
+              {/* Map Placeholder */}
               <ScrollAnimation delay={400}>
-                <div className="mt-8 rounded-2xl overflow-hidden h-64 bg-muted">
-                  <img src="/map-kolwezi-drc.jpg" alt="Our Location" className="w-full h-full object-cover" />
+                <div className="mt-8 rounded-2xl overflow-hidden h-64 bg-muted flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <p>Location Map</p>
+                    <p className="text-sm mt-2">Office Av.Moero,No 13A,Q.Kasombo,C.Manika,Kolwezi</p>
+                  </div>
                 </div>
               </ScrollAnimation>
             </div>

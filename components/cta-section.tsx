@@ -8,7 +8,7 @@ export function CTASection() {
     <section className="py-24 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src="/industrial-construction-site-sunset-panoramic.jpg" alt="Background" className="w-full h-full object-cover" />
+        <div className="w-full h-full bg-primary/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70" />
       </div>
 
