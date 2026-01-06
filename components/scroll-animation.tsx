@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
 interface ScrollAnimationProps {
@@ -12,6 +12,7 @@ interface ScrollAnimationProps {
 
 export function ScrollAnimation({ children, className, delay = 0, direction = "up" }: ScrollAnimationProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -19,7 +20,7 @@ export function ScrollAnimation({ children, className, delay = 0, direction = "u
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setTimeout(() => {
-              entry.target.classList.add("visible")
+              setIsVisible(true)
             }, delay)
           }
         })
@@ -37,13 +38,13 @@ export function ScrollAnimation({ children, className, delay = 0, direction = "u
   const getInitialTransform = () => {
     switch (direction) {
       case "left":
-        return "translate-x-[-50px]"
+        return "-translate-x-12"
       case "right":
-        return "translate-x-[50px]"
+        return "translate-x-12"
       case "scale":
         return "scale-95"
       default:
-        return "translate-y-[30px]"
+        return "translate-y-7"
     }
   }
 
@@ -51,9 +52,10 @@ export function ScrollAnimation({ children, className, delay = 0, direction = "u
     <div
       ref={ref}
       className={cn(
-        "opacity-0 transition-all duration-700 ease-out",
-        getInitialTransform(),
-        "[&.visible]:opacity-100 [&.visible]:translate-x-0 [&.visible]:translate-y-0 [&.visible]:scale-100",
+        "transition-all duration-700 ease-out",
+        isVisible 
+          ? "opacity-100 translate-x-0 translate-y-0 scale-100" 
+          : `opacity-0 ${getInitialTransform()}`,
         className,
       )}
     >
