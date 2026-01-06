@@ -43,8 +43,8 @@ export async function query<T>(sql: string, params?: unknown[]): Promise<T[]> {
 }
 
 export async function queryOne<T>(sql: string, params?: unknown[]): Promise<T | null> {
-  const rows = await query<T>(sql, params);
-  return rows[0] || null;
+  const rows = await query<T>(sql, params)
+  return rows[0] || null
 }
 
 export async function execute(sql: string, params?: unknown[]) {
@@ -65,4 +65,4 @@ export async function execute(sql: string, params?: unknown[]) {
   }
 }
 
-export { pool };
+export { pool }
