@@ -110,7 +110,7 @@ export function ContactForm() {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-                placeholder="+243 123 456 789"
+                placeholder="+243 972 144 161"
               />
             </div>
             <div className="space-y-2">

@@ -94,7 +94,7 @@ export function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <span className="text-background/70 text-sm">
-                  Avenue Kasulo, Quartier Latin
+                  Office Av.Moero,No 13A,Q.Kasombo,C.Manika
                   <br />
                   Kolwezi, Lualaba Province
                   <br />
@@ -103,17 +103,22 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0" />
-                <a href="tel:+243123456789" className="text-background/70 hover:text-primary transition-colors text-sm">
-                  +243 123 456 789
-                </a>
+                <div>
+                  <a href="tel:+243972144161" className="text-background/70 hover:text-primary transition-colors text-sm block">
+                    +243 972 144 161
+                  </a>
+                  <a href="tel:+243823740298" className="text-background/70 hover:text-primary transition-colors text-sm block mt-1">
+                    +243 823 740 298
+                  </a>
+                </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary shrink-0" />
                 <a
-                  href="mailto:info@kmssarl.org"
+                  href="mailto:gfataki.kms@gmail.com"
                   className="text-background/70 hover:text-primary transition-colors text-sm"
                 >
-                  info@kmssarl.org
+                  gfataki.kms@gmail.com
                 </a>
               </li>
             </ul>
