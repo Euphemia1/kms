@@ -10,17 +10,17 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Our Office",
-    details: ["Avenue Kasulo, Quartier Latin", "Kolwezi, Lualaba Province", "Democratic Republic of Congo"],
+    details: ["Office Av.Moero,No 13A,Q.Kasombo,C.Manika,Kolwezi", "Lualaba Province, Democratic Republic of Congo"],
   },
   {
     icon: Phone,
     title: "Phone",
-    details: ["+243 123 456 789", "+243 987 654 321"],
+    details: ["+243 972 144 161", "+243 823 740 298"],
   },
   {
     icon: Mail,
     title: "Email",
-    details: ["info@kmssarl.org", "projects@kmssarl.org"],
+    details: ["gfataki.kms@gmail.com"],
   },
   {
     icon: Clock,
@@ -104,7 +104,7 @@ export default function ContactPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" variant="secondary" className="rounded-full">
-                <a href="tel:+243123456789">
+                <a href="tel:+243972144161">
                   <Phone className="mr-2 w-4 h-4" />
                   Call Now
                 </a>
@@ -115,7 +115,7 @@ export default function ContactPage() {
                 variant="outline"
                 className="rounded-full bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
               >
-                <a href="mailto:info@kmssarl.org">
+                <a href="mailto:gfataki.kms@gmail.com">
                   <Mail className="mr-2 w-4 h-4" />
                   Email Us
                 </a>
