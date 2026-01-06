@@ -12,6 +12,7 @@ interface ScrollAnimationProps {
 
 export function ScrollAnimation({ children, className, delay = 0, direction = "up" }: ScrollAnimationProps) {
   const ref = useRef<HTMLDivElement>(null)
+
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export function ScrollAnimation({ children, className, delay = 0, direction = "u
     }
 
     return () => observer.disconnect()
-  }, [delay])
+  }, [delay, direction])
 
   const getInitialTransform = () => {
     switch (direction) {
