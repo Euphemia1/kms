@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { cn } from "@/lib/utils"
 
 interface ScrollAnimationProps {
   children: ReactNode
@@ -10,7 +9,7 @@ interface ScrollAnimationProps {
   direction?: "up" | "left" | "right" | "scale"
 }
 
-export function ScrollAnimation({ children, className, delay = 0, direction = "up" }: ScrollAnimationProps) {
+export function ScrollAnimation({ children, className = '', delay = 0, direction = "up" }: ScrollAnimationProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   const [isVisible, setIsVisible] = useState(false)
@@ -36,29 +35,49 @@ export function ScrollAnimation({ children, className, delay = 0, direction = "u
     return () => observer.disconnect()
   }, [delay, direction])
 
-  const getInitialTransform = () => {
-    switch (direction) {
-      case "left":
-        return "-translate-x-12"
-      case "right":
-        return "translate-x-12"
-      case "scale":
-        return "scale-95"
-      default:
-        return "translate-y-7"
+  // Simple inline styles approach to avoid Tailwind utility issues
+  const getStyle = () => {
+    if (isVisible) {
+      return {
+        opacity: 1,
+        transform: 'translateX(0px) translateY(0px) scale(1)',
+        transition: 'all 0.7s ease-out',
+      };
+    } else {
+      switch (direction) {
+        case "left":
+          return {
+            opacity: 0,
+            transform: 'translateX(-48px)',
+            transition: 'all 0.7s ease-out',
+          };
+        case "right":
+          return {
+            opacity: 0,
+            transform: 'translateX(48px)',
+            transition: 'all 0.7s ease-out',
+          };
+        case "scale":
+          return {
+            opacity: 0,
+            transform: 'scale(0.95)',
+            transition: 'all 0.7s ease-out',
+          };
+        default: // up
+          return {
+            opacity: 0,
+            transform: 'translateY(28px)',
+            transition: 'all 0.7s ease-out',
+          };
+      }
     }
-  }
+  };
 
   return (
     <div
       ref={ref}
-      className={cn(
-        "transition-all duration-700 ease-out",
-        isVisible 
-          ? "opacity-100 translate-x-0 translate-y-0 scale-100" 
-          : `opacity-0 ${getInitialTransform()}`,
-        className,
-      )}
+      style={getStyle()}
+      className={className}
     >
       {children}
     </div>
