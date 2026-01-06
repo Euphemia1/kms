@@ -25,13 +25,7 @@ const pool = mysql.createPool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   // Additional settings for shared hosting
   insecureAuth: true, // Required for some shared hosting providers
-  multipleStatements: true,
-  // Use legacy auth for older MySQL versions
-  authPlugins: {
-    mysql_clear_password: () => (pluginData: Buffer) => {
-      return Buffer.from(dbConfig.password + '\0', 'utf8');
-    }
-  }
+  multipleStatements: true
 });
 
 export async function query<T>(sql: string, params?: unknown[]): Promise<T[]> {
