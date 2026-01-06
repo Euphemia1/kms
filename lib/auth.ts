@@ -33,7 +33,8 @@ export async function createSession(userId: string): Promise<string> {
   const token = uuidv4()
   const expiresAt = new Date(Date.now() + SESSION_DURATION)
 
-  await execute("INSERT INTO sessions (id, user_id, token, expires_at) VALUES (UUID(), ?, ?, ?)", [
+  await execute("INSERT INTO sessions (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)", [
+    uuidv4(),
     userId,
     token,
     expiresAt,

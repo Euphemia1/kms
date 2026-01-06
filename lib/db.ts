@@ -25,7 +25,9 @@ const pool = mysql.createPool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   // Additional settings for shared hosting
   insecureAuth: true, // Required for some shared hosting providers
-  multipleStatements: true
+  multipleStatements: true,
+  // Connection charset
+  charset: 'utf8mb4'
 });
 
 export async function query<T>(sql: string, params?: unknown[]): Promise<T[]> {
@@ -50,6 +52,9 @@ export async function query<T>(sql: string, params?: unknown[]): Promise<T[]> {
       } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
         console.error('Database access denied - check username and password');
         throw new Error('Database access denied');
+      } else if (error.code === 'ECONNRESET') {
+        console.error('Database connection was reset');
+        throw new Error('Database connection lost');
       } else {
         throw new Error('Database query failed');
       }
@@ -86,6 +91,9 @@ export async function execute(sql: string, params?: unknown[]) {
       } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
         console.error('Database access denied - check username and password');
         throw new Error('Database access denied');
+      } else if (error.code === 'ECONNRESET') {
+        console.error('Database connection was reset');
+        throw new Error('Database connection lost');
       } else {
         throw new Error('Database execute failed');
       }
